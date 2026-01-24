@@ -1,0 +1,49 @@
+Bootstrap: docker
+From: mcr.microsoft.com/devcontainers/python:3.11
+
+%post
+    apt-get update
+    apt-get install -y --no-install-recommends \
+        git \
+        curl \
+        openssh-client \
+        build-essential \
+        pkg-config \
+        cmake \
+        make \
+        jq \
+        ripgrep \
+        sqlite3
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+    # Install OpenCode CLI
+    curl -fsSL https://opencode.ai/install | bash
+
+    # Ensure opencode is on a stable path
+    if [ -x /root/.local/bin/opencode ]; then
+        install -m 0755 /root/.local/bin/opencode /usr/local/bin/opencode
+    elif [ -x /root/.opencode/bin/opencode ]; then
+        install -m 0755 /root/.opencode/bin/opencode /usr/local/bin/opencode
+    fi
+
+    # Install micromamba (tarball)
+    curl -fsSL https://micro.mamba.pm/api/micromamba/linux-64/latest \
+        | tar -xvj -C /tmp
+    install -m 0755 /tmp/bin/micromamba /usr/local/bin/micromamba
+    rm -rf /tmp/bin
+
+    # Install uv
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    if [ -x /root/.local/bin/uv ]; then
+        install -m 0755 /root/.local/bin/uv /usr/local/bin/uv
+    fi
+
+    # Ensure pip is available and up to date
+    python -m pip install --no-cache-dir --upgrade pip
+
+%environment
+    export PATH=/usr/local/bin:$PATH
+
+%runscript
+    exec /bin/bash "$@"
