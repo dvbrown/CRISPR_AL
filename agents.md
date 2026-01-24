@@ -1,8 +1,12 @@
 # Agents Guide
 
-This project uses agent-assisted workflows for repeatable analysis.
+This project uses agent-assisted workflows focused on selecting which genes to
+perturb in experimental campaigns.
 
 ## Default Behaviors
+- Prioritize target selection logic and ranking for perturbation campaigns.
+- Avoid data-processing pipelines unless they are required for selection.
+- Use one micromamba environment per external repo; do not share envs.
 - Use Python modules in `src/` folder for reusable computation.
 - Use notebooks for exploration and result visualization.
 - Record decisions in `docs/decision-log/`.

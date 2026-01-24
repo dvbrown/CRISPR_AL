@@ -1,8 +1,8 @@
 # CRISPR Active Learning Lab
 
 This workspace is for evaluating CRISPR screening codebases with a focus on
-combinatorial and dual-guide screens, then combining the strongest ideas into
-one custom workflow. Heavy computation lives in Python modules, while notebooks
+gene selection for perturbation campaigns, especially combinatorial and
+dual-guide contexts. Heavy computation lives in Python modules, while notebooks
 are used to run experiments and inspect results.
 
 ## Repository Layout
@@ -24,3 +24,17 @@ Keep any credentials out of the repo and use environment variables instead.
 2. Check `docs/repo_list.md` for candidate repositories.
 3. Use `docs/evals/template.md` to evaluate a repo and update
    `docs/evals/summary.md`.
+
+## Micromamba Environments
+This project evaluates multiple external repositories with conflicting
+dependencies, so use one micromamba environment per repo rather than a single
+shared environment.
+
+Recommended layout:
+- `repos/` for cloned repositories.
+- `repos/.envs/<repo>/` for micromamba env prefixes.
+- Set `MAMBA_ROOT_PREFIX` and `CONDA_PKGS_DIRS` to a writable path inside the
+  bound workspace (for Apptainer usage).
+
+Record the environment prefix and any install notes in the repo's evaluation
+note in `docs/evals/`.
