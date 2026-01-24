@@ -1,7 +1,8 @@
 # Agents Guide
 
 This project uses agent-assisted workflows focused on selecting which genes to
-perturb in experimental campaigns.
+perturb with CRISPR in experimental campaigns.
+Multiple small CRISPR experiments will be performed in an active learning workflow.
 
 ## Default Behaviors
 - Prioritize target selection logic and ranking for perturbation campaigns.

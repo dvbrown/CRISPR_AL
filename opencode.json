@@ -1,0 +1,6 @@
+{
+    "opentargets": {
+      "type": "remote",
+      "url": "https://mcp.platform.opentargets.org/mcp"
+    }
+}
