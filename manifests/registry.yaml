@@ -1,0 +1,27 @@
+version: 1
+data_root: data
+datasets:
+  - name: gears_iterpert_tiny
+    type: synthetic
+    version: 2026-01-25
+    source:
+      local_path: tests/data/gears_iterpert_tiny
+    target_subdir: synthetic/gears_iterpert_tiny/v2026-01-25
+    checksum_file: checksums.sha256
+    notes: Tiny AnnData fixture for GEARS/IterPert tests
+  - name: genome_scale_tcell_perturb_seq
+    type: real
+    version: 2025-12-22
+    source:
+      local_path: external/vcp/genome-scale-tcell-perturb-seq
+    target_subdir: real/genome_scale_tcell_perturb_seq/v2025-12-22
+    checksum_file: checksums.sha256
+    notes: Primary Human CD4+ T Cell Perturb-seq (VCP, MIT license)
+  - name: k562_essential_perturb_seq
+    type: real
+    version: 2025-09-03
+    source:
+      local_path: external/vcp/k562-essential-perturb-seq
+    target_subdir: real/k562_essential_perturb_seq/v2025-09-03
+    checksum_file: checksums.sha256
+    notes: K562 Essential Perturb-seq benchmark (VCP, CC BY-NC-SA 4.0)

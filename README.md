@@ -12,6 +12,10 @@ are used to run experiments and inspect results.
 - `data/` input datasets (not tracked unless small)
 - `results/` outputs from runs and evaluations
 
+## Data Layout
+See `data/README.md` for the local data layout, registry usage, and scripts.
+Small, tracked test fixtures live under `tests/data/`.
+
 ## Open Targets MCP
 The remote Open Targets MCP endpoint is used for external evidence:
 - Endpoint: `https://mcp.platform.opentargets.org/mcp`

@@ -1,3 +1,5 @@
 external/
 .micromamba/
 *.cpy
+data/**
+!data/README.md
