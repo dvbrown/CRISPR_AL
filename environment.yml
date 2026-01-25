@@ -1,0 +1,26 @@
+name: crispr-al
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python >=3.10,<=3.13
+  - pip
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - seaborn
+  - matplotlib
+  - biopython
+  - tqdm
+  - joblib
+  - jupyterlab
+  - notebook
+  - ipykernel
+  - ipywidgets
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cpuonly
+  - pip:
+      - vcp-cli[all]
