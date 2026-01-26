@@ -17,6 +17,11 @@
 ## Perturbation prediction
 
 - [GPerturb](https://github.com/hwxing3259/GPerturb)
+    - Add desc
+- [PeturbNet](https://github.com/welch-lab/PerturbNet/tree/main)
+    - Add desc
+- [scLAMBDA](https://github.com/gefeiwang/scLAMBDA)
+    - Add desc
 - [GenePert](https://github.com/zou-group/GenePert)
   - Regression-based model using GenePT embeddings to predict gene expression changes from genetic perturbations.
 - [scGenePT](https://github.com/czi-ai/scGenePT)
