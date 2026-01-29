@@ -1,0 +1,26 @@
+{
+  "cell_type": "K562",
+  "cells_per_pert": 6,
+  "conditions": [
+    "ctrl",
+    "TP53+ctrl",
+    "EGFR+ctrl",
+    "KRAS+ctrl",
+    "MYC+ctrl",
+    "BRCA1+ctrl",
+    "CDK2+ctrl"
+  ],
+  "created_at": "2026-01-25T01:07:41.532937Z",
+  "genes": [
+    "TP53",
+    "EGFR",
+    "KRAS",
+    "MYC",
+    "BRCA1",
+    "CDK2"
+  ],
+  "name": "gears_iterpert_tiny",
+  "notes": "Tiny synthetic AnnData for GEARS/IterPert tests",
+  "seed": 1337,
+  "version": "2026-01-25"
+}
