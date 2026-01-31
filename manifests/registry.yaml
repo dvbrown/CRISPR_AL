@@ -21,7 +21,29 @@ datasets:
     type: real
     version: 2025-09-03
     source:
-      local_path: data/vcp/k562-essential-perturb-seq
+      local_path: data/real/k562_essential_perturb_seq/v2025-09-03
     target_subdir: real/k562_essential_perturb_seq/v2025-09-03
     checksum_file: checksums.sha256
-    notes: K562 Essential Perturb-seq benchmark (VCP, CC BY-NC-SA 4.0)
+    dataset_id: 691646a970aa250845229d7f
+    source_url: https://virtualcellmodels.cziscience.com/dataset/k562-essential-perturb-seq
+    license: https://creativecommons.org/publicdomain/zero/1.0/
+    doi: 10.1038/s41587-020-0470-y
+    description: Benchmarking Perturb-seq dataset for K562 essential gene perturbations.
+    assay: Perturb-Seq
+    assay_ontology_term_id: EFO:0008860
+    organism: Homo sapiens
+    organism_ontology_term_id: NCBITaxon:9606
+    tissue: lymphoblast
+    tissue_ontology_term_id: CL:0017005
+    tissue_type: cell culture
+    disease: chronic myelogenous leukemia, BCR-ABL1 positive
+    disease_ontology_term_id: MONDO:0011996
+    development_stage: 53-year-old stage
+    development_stage_ontology_term_id: HsapDv:0000147
+    file:
+      path: replogle_k562_essential_perturbation.h5ad
+      format: h5ad
+      size_bytes: 2890786004
+      source_url: s3://cz-benchmarks-data/datasets/v1/perturb/single_cell/replogle_k562_essential_perturbation.h5ad
+    downloaded_at: 2026-01-31
+    notes: Primary K562 Perturb-seq measurements used to benchmark essential gene perturbations.

@@ -14,6 +14,9 @@
 - [state](#state)
 - [AttentionPert](#attentionpert)
 - [scPRAM](#scpram)
+- [GPerturb](#gperturb)
+- [PerturbNet](#perturbnet)
+- [scLAMBDA](#sclambda)
 - [Benchmarking Frameworks](#benchmarking-frameworks)
 - [perturbench](#perturbench)
 - [scPerturb](#scperturb)
@@ -435,6 +438,129 @@
 #### Reusable Components
 - Code modules worth extracting: training/prediction API in `scpram` package.
 - Ideas to integrate into custom workflow: lightweight surrogate for single-gene prediction.
+
+### GPerturb
+#### Repo
+- URL: https://github.com/hwxing3259/GPerturb
+- Primary language: Python
+- Last update: unknown
+
+#### Problem Statement
+- What the repository is trying to solve: estimate interpretable, sparse gene-level perturbation effects from single-cell data.
+- Target data type (single/dual/combinatorial): single-gene perturbations (single-cell expression).
+- Output type (gene scores, interactions, hits, etc.): predicted expression and sparse perturbation effect matrix.
+
+#### Algorithm Overview
+- Model family (Bayesian, GP, NN, linear, etc.): Bayesian sparse distributional regression.
+- Key assumptions: perturbation effects are sparse and additive in the model space.
+- Training objective: fit perturbation effects to match observed expression distributions.
+- Inference outputs: estimated expression and perturbation effect estimates per gene.
+
+#### Active Learning / Selection Strategy
+- Acquisition function (if any): none.
+- Uncertainty estimation: implicit via Bayesian model; not exposed as an AL policy.
+- Batch strategy: not applicable.
+
+#### Reproducibility
+- Install steps: `pip install git+https://github.com/hwxing3259/GPerturb.git`.
+- Minimal run command: use numerical example notebooks under `numerical_examples/`.
+- Required datasets: SciPlex2 and other single-cell perturbation datasets (examples linked).
+- Expected outputs: fitted expression estimates and sparse perturbation effect matrices.
+
+#### Evaluation
+- Metrics used: not specified in README (see paper).
+- Baselines: not specified in README.
+- Strengths: interpretable sparse effects; outputs explicit perturbation effect matrix.
+- Limitations: relies on provided covariates and careful preprocessing.
+- Documentation quality: concise; relies on notebooks for usage.
+- Code quality: single-model implementation, notebook-driven workflows.
+- Math quality/robustness: Bayesian modeling with explicit sparsity assumptions.
+
+#### Reusable Components
+- Code modules worth extracting: perturbation effect estimation utilities.
+- Ideas to integrate into custom workflow: use sparse effect matrix as priors or labels for AL ranking.
+
+### PerturbNet
+#### Repo
+- URL: https://github.com/welch-lab/PerturbNet/tree/main
+- Primary language: Python
+- Last update: unknown
+
+#### Problem Statement
+- What the repository is trying to solve: predict distributions of single-cell states for unseen chemical or genetic perturbations.
+- Target data type (single/dual/combinatorial): single-gene or chemical perturbations (single-cell expression).
+- Output type (gene scores, interactions, hits, etc.): predicted cell state distributions and expression profiles.
+
+#### Algorithm Overview
+- Model family (Bayesian, GP, NN, linear, etc.): deep generative model with cINN and scVI-based decoders.
+- Key assumptions: latent representations capture perturbation response distributions.
+- Training objective: model perturbation-conditioned single-cell distributions.
+- Inference outputs: predicted expression distributions and generated cells.
+
+#### Active Learning / Selection Strategy
+- Acquisition function (if any): none.
+- Uncertainty estimation: not specified.
+- Batch strategy: not applicable.
+
+#### Reproducibility
+- Install steps: conda env + `pip install PerturbNet`.
+- Minimal run command: use tutorial notebooks in `notebooks/`.
+- Required datasets: tutorial datasets from Hugging Face.
+- Expected outputs: trained model checkpoints, predicted cell states, evaluation metrics.
+
+#### Evaluation
+- Metrics used: not specified in README (see paper).
+- Baselines: not specified in README.
+- Strengths: handles unseen perturbations; supports chemical and genetic data.
+- Limitations: older dependency stack; GPU recommended.
+- Documentation quality: good notebook coverage with benchmarks.
+- Code quality: modular package with adapted scVI components.
+- Math quality/robustness: strong deep generative modeling; details in paper.
+
+#### Reusable Components
+- Code modules worth extracting: conditional generative modeling pipeline.
+- Ideas to integrate into custom workflow: use generated distributional predictions as surrogate outputs.
+
+### scLAMBDA
+#### Repo
+- URL: https://github.com/gefeiwang/scLAMBDA
+- Primary language: Python
+- Last update: unknown
+
+#### Problem Statement
+- What the repository is trying to solve: predict single-cell responses for single and multi-gene perturbations using gene embeddings.
+- Target data type (single/dual/combinatorial): single and multi-gene perturbations (single-cell expression).
+- Output type (gene scores, interactions, hits, etc.): predicted expression profiles and generated perturbed cells.
+
+#### Algorithm Overview
+- Model family (Bayesian, GP, NN, linear, etc.): deep generative model with disentangled representations.
+- Key assumptions: gene embeddings capture perturbation semantics; disentangling basal vs. perturbation effects improves generalization.
+- Training objective: reconstruct and generate perturbation-conditioned single-cell expression.
+- Inference outputs: predicted expression means or generated cell distributions.
+
+#### Active Learning / Selection Strategy
+- Acquisition function (if any): none.
+- Uncertainty estimation: not specified.
+- Batch strategy: not applicable.
+
+#### Reproducibility
+- Install steps: `conda env update -f environment.yml` then `conda activate sclambda`.
+- Minimal run command: use demo notebooks in `demos/`.
+- Required datasets: AnnData with perturbation conditions and gene embeddings.
+- Expected outputs: trained models, predicted expression matrices.
+
+#### Evaluation
+- Metrics used: not specified in README (see paper).
+- Baselines: not specified in README.
+- Strengths: supports multi-gene perturbations; leverages external embeddings.
+- Limitations: requires embedding inputs; setup relies on conda env file.
+- Documentation quality: good quick-start and demos.
+- Code quality: research code with clear API entry points.
+- Math quality/robustness: strong generative modeling framing; details in paper.
+
+#### Reusable Components
+- Code modules worth extracting: data split helpers and embedding-conditioned model wrapper.
+- Ideas to integrate into custom workflow: use gene embedding conditioning for AL surrogate modeling.
 
 ## Benchmarking Frameworks
 
