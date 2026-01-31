@@ -13,7 +13,7 @@ datasets:
     type: real
     version: 2025-12-22
     source:
-      local_path: external/vcp/genome-scale-tcell-perturb-seq
+      local_path: data/vcp/genome-scale-tcell-perturb-seq
     target_subdir: real/genome_scale_tcell_perturb_seq/v2025-12-22
     checksum_file: checksums.sha256
     notes: Primary Human CD4+ T Cell Perturb-seq (VCP, MIT license)
@@ -21,7 +21,7 @@ datasets:
     type: real
     version: 2025-09-03
     source:
-      local_path: external/vcp/k562-essential-perturb-seq
+      local_path: data/vcp/k562-essential-perturb-seq
     target_subdir: real/k562_essential_perturb_seq/v2025-09-03
     checksum_file: checksums.sha256
     notes: K562 Essential Perturb-seq benchmark (VCP, CC BY-NC-SA 4.0)

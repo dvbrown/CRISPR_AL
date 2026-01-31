@@ -17,11 +17,11 @@
 ## Perturbation prediction
 
 - [GPerturb](https://github.com/hwxing3259/GPerturb)
-    - Add desc
-- [PeturbNet](https://github.com/welch-lab/PerturbNet/tree/main)
-    - Add desc
+  - Bayesian sparse distributional regression model that estimates gene-level perturbation effects and predicts expression responses.
+- [PerturbNet](https://github.com/welch-lab/PerturbNet/tree/main)
+  - Deep generative model that predicts single-cell state distributions for chemical and genetic perturbations, including unseen ones.
 - [scLAMBDA](https://github.com/gefeiwang/scLAMBDA)
-    - Add desc
+  - Deep generative framework using gene embeddings to predict single- and multi-gene perturbation responses with disentangled representations.
 - [GenePert](https://github.com/zou-group/GenePert)
   - Regression-based model using GenePT embeddings to predict gene expression changes from genetic perturbations.
 - [scGenePT](https://github.com/czi-ai/scGenePT)
