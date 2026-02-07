@@ -1,48 +1,28 @@
 name: crispr-al
 channels:
+  - nvidia
+  - bioconda
   - pytorch
   - conda-forge
 dependencies:
   - python >=3.10,<=3.13
+  - pytorch
   - pip
+  - uv
+  - marimo
   - numpy
   - pandas
   - scipy
   - scikit-learn
+  - lightgbm
   - seaborn
   - matplotlib
   - biopython
   - anndata
   - scanpy
-  - scvi-tools
-  - cellxgene-census
-  - leidenalg
-  - python-igraph
-  - umap-learn
-  - harmonypy
-  - pertpy
-  - gseapy
   - tqdm
   - joblib
-  - pytorch-lightning
-  - torchmetrics
-  - optuna
-  - pysam
-  - pybedtools
-  - pyranges
-  - pyfaidx
-  - pandas-plink
   - jupyterlab
   - notebook
   - ipykernel
   - ipywidgets
-  - plotly
-  - altair
-  - gget
-  - bioservices
-  - pytorch
-  - torchvision
-  - torchaudio
-  - cpuonly
-  - pip:
-      - vcp-cli[all]

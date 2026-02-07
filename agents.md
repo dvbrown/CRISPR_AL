@@ -9,7 +9,10 @@ Multiple small CRISPR experiments will be performed in an active learning workfl
 - Avoid data-processing pipelines unless they are required for selection.
 - Use one micromamba environment per external repo; do not share envs.
 - Use Python modules in `src/` folder for reusable computation.
+- Place notebook-specific CLI scripts in `notebooks/<subfolder>/scripts` while keeping core logic in `src/`.
 - Use notebooks for exploration and result visualization.
+- Save tutorial analysis outputs under `notebooks/<subfolder>/outputs`.
+- Keep input datasets in the top-level `data/` directory.
 - Record decisions in `docs/decision-log/`.
 - Keep external credentials out of the repo.
 

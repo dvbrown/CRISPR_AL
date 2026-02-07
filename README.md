@@ -42,3 +42,12 @@ Recommended layout:
 
 Record the environment prefix and any install notes in the repo's evaluation
 note in `docs/evals/`.
+
+### Global micromamba env
+
+There is a global micromamba env for running generic notebooks
+```bash
+micromamba create -f environment.yml -p .micromamba.envs/crispr-al
+micromamba activate .micromamba.envs/crispr-al
+python -m ipykernel install --user --name crispr-al --display-name "Python (crispr-al)"
+```
