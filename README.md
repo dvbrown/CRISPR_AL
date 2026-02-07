@@ -47,7 +47,7 @@ note in `docs/evals/`.
 
 There is a global micromamba env for running generic notebooks
 ```bash
-micromamba create -f environment.yml -p .micromamba.envs/crispr-al
-micromamba activate .micromamba.envs/crispr-al
+micromamba create -f environment.yml -p .micromamba/envs/crispr-al
+micromamba activate .micromamba/envs/crispr-al
 python -m ipykernel install --user --name crispr-al --display-name "Python (crispr-al)"
 ```
