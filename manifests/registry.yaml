@@ -47,3 +47,37 @@ datasets:
       source_url: s3://cz-benchmarks-data/datasets/v1/perturb/single_cell/replogle_k562_essential_perturbation.h5ad
     downloaded_at: 2026-01-31
     notes: Primary K562 Perturb-seq measurements used to benchmark essential gene perturbations.
+  - name: depmap_crispr_gene_effect
+    type: real
+    version: DepMapPublic_25Q3
+    source:
+      local_path: data/real/depmap_crispr_gene_effect/vDepMapPublic_25Q3
+    target_subdir: real/depmap_crispr_gene_effect/vDepMapPublic_25Q3
+    checksum_file: checksums.sha256
+    source_url: https://depmap.org/portal/download/api/download?file_name=downloads-by-canonical-id%2F25q3-public-6202.1%2FCRISPRGeneEffect.csv&dl_name=CRISPRGeneEffect.csv&bucket=depmap-external-downloads
+    description: DepMap Public 25Q3 Chronos gene effect estimates for all models.
+    file:
+      path: CRISPRGeneEffect.csv.gz
+      format: csv.gz
+      size_bytes: 194929199
+    downloaded_at: 2026-02-08
+  - name: horlbeck_2018_gi_k562
+    type: real
+    version: GSE116198
+    source:
+      local_path: data/real/horlbeck_2018_gi_k562/vGSE116198
+    target_subdir: real/horlbeck_2018_gi_k562/vGSE116198
+    checksum_file: checksums.sha256
+    source_url: https://ftp.ncbi.nlm.nih.gov/geo/series/GSE116nnn/GSE116198/suppl/
+    description: Horlbeck et al. 2018 CRISPRi genetic interaction map (K562) supplemental files.
+    files:
+      - path: GSE116198_sgRNA_pair_phenotypes.txt.gz
+        format: tsv.gz
+        size_bytes: 112096990
+      - path: GSE116198_GImap_sgRNA_sequences_barcodes.txt.gz
+        format: tsv.gz
+        size_bytes: 36505
+      - path: GSE116198_sgRNA_pair_read_counts.txt.gz
+        format: tsv.gz
+        size_bytes: 47965907
+    downloaded_at: 2026-02-08

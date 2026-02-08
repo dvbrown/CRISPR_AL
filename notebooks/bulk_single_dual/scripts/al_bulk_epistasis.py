@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""Active learning for bulk CRISPR epistasis with an additive + residual surrogate.
+
+This script loads DepMap single-gene effects and a GI map, intersects gene pairs,
+trains an ensemble epistasis surrogate, and iteratively selects batches using an
+acquisition score plus a diversity strategy (k-center, k-means, TypiClust, or random).
+It writes round summaries, long-form metrics, selected pairs, and run config files
+to the output directory.
+"""
+
 import argparse
 import json
 from dataclasses import dataclass
@@ -12,6 +21,22 @@ from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_DEPMAP_PATH = (
+    REPO_ROOT
+    / "data/real/depmap_crispr_gene_effect/vDepMapPublic_25Q3/CRISPRGeneEffect.csv.gz"
+)
+DEFAULT_GI_PATH = (
+    REPO_ROOT
+    / "data/real/horlbeck_2018_gi_k562/vGSE116198/GSE116198_sgRNA_pair_phenotypes.txt.gz"
+)
+DEPMAP_CELL_LINE_MAP = {
+    "K562": "ACH-000552",
+}
+DEFAULT_HORLBECK_CELL_LINE = "K562"
+DEFAULT_HORLBECK_ASSAY = "sgRNA Sequencing"
+DEFAULT_HORLBECK_REPLICATE = "Replicate average"
 
 
 @dataclass
@@ -71,10 +96,10 @@ def set_seed(seed):
 def infer_sep(path, sep):
     if sep:
         return sep
-    suffix = Path(path).suffix.lower()
-    if suffix in {".tsv", ".txt"}:
+    suffixes = {suffix.lower() for suffix in Path(path).suffixes}
+    if ".tsv" in suffixes or ".txt" in suffixes:
         return "\t"
-    if suffix in {".csv"}:
+    if ".csv" in suffixes:
         return ","
     return None
 
@@ -86,13 +111,87 @@ def read_table(path, sep=None):
     return pd.read_csv(path, sep=sep)
 
 
+def resolve_depmap_cell_line(cell_line, index):
+    if cell_line is None:
+        return None
+    cell_line = str(cell_line).strip()
+    if cell_line in index:
+        return cell_line
+    mapped = DEPMAP_CELL_LINE_MAP.get(cell_line.upper())
+    if mapped and mapped in index:
+        return mapped
+    return None
+
+
+def load_depmap_matrix(path, cell_line, sep=None):
+    if not cell_line:
+        raise ValueError("Cell line is required for DepMap matrix inputs")
+    sep = infer_sep(path, sep)
+    df = pd.read_csv(path, sep=sep, index_col=0)
+    resolved = resolve_depmap_cell_line(cell_line, df.index)
+    if resolved is None:
+        raise ValueError(
+            "Cell line not found in DepMap matrix. "
+            "Provide a DepMap ID or a long-format table with gene/effect columns."
+        )
+    series = df.loc[resolved]
+    gene_names = series.index.astype(str).str.replace(r"\s+\(.*\)$", "", regex=True)
+    effects = pd.to_numeric(series.values, errors="coerce")
+    out = pd.DataFrame({"gene_name": gene_names, "effect": effects})
+    out = out.dropna(subset=["gene_name", "effect"])
+    out = out.drop_duplicates(subset=["gene_name"], keep="first")
+    return out
+
+
+def parse_horlbeck_gene(sgrna):
+    for token in ("_+_", "_-_"):
+        if token in sgrna:
+            return sgrna.split(token, 1)[0]
+    return sgrna.split("_", 1)[0]
+
+
+def load_horlbeck_raw(path, cell_line, assay, replicate):
+    df = pd.read_csv(path, sep="\t", header=[0, 1, 2], index_col=0)
+    if not isinstance(df.columns, pd.MultiIndex):
+        raise ValueError("Horlbeck raw file did not parse with a multi-row header")
+    try:
+        gi_series = df[(cell_line, assay, replicate)]
+    except KeyError as exc:
+        available = sorted({col[0] for col in df.columns})
+        raise ValueError(
+            "Requested Horlbeck column not found. "
+            f"Available cell lines: {', '.join(available)}"
+        ) from exc
+    gi_series = gi_series[gi_series.index.notna()]
+    gi_series = gi_series[gi_series.index.astype(str).str.len() > 0]
+    pair_ids = gi_series.index.astype(str)
+    pair_ids = pair_ids[pair_ids.str.contains("++")]
+    parts = pair_ids.str.split("++", n=1, expand=True)
+    gene_a = parts[0].map(parse_horlbeck_gene)
+    gene_b = parts[1].map(parse_horlbeck_gene)
+    out = pd.DataFrame(
+        {
+            "gene_a": gene_a,
+            "gene_b": gene_b,
+            "gi_score": pd.to_numeric(gi_series.values, errors="coerce"),
+        }
+    )
+    out = out.dropna(subset=["gene_a", "gene_b", "gi_score"])
+    out = canonicalize_pairs(out, "gene_a", "gene_b")
+    out = out.groupby(["gene_a", "gene_b"], as_index=False)["gi_score"].mean()
+    return out
+
+
 def load_single_gene_effects(
     path, gene_col, effect_col, cell_line_col=None, cell_line=None, sep=None
 ):
+    path_name = Path(path).name
+    if path_name.startswith(("CRISPRGeneEffect", "ScreenGeneEffect")):
+        return load_depmap_matrix(path, cell_line, sep=sep)
     df = read_table(path, sep=sep)
     missing = [col for col in [gene_col, effect_col] if col not in df.columns]
     if missing:
-        raise ValueError(f"Missing columns in DepMap table: {missing}")
+        return load_depmap_matrix(path, cell_line, sep=sep)
     df = df.copy()
     df[gene_col] = df[gene_col].astype(str).str.strip()
     df[effect_col] = pd.to_numeric(df[effect_col], errors="coerce")
@@ -121,11 +220,33 @@ def canonicalize_pairs(df, gene_a_col, gene_b_col):
     return df
 
 
-def load_gi_map(path, gene_a_col, gene_b_col, gi_col, sep=None):
+def load_gi_map(
+    path,
+    gene_a_col,
+    gene_b_col,
+    gi_col,
+    sep=None,
+    raw_cell_line=None,
+    raw_assay=None,
+    raw_replicate=None,
+):
+    path_name = Path(path).name
+    if "GSE116198" in path_name and "phenotypes" in path_name:
+        return load_horlbeck_raw(
+            path,
+            raw_cell_line or DEFAULT_HORLBECK_CELL_LINE,
+            raw_assay or DEFAULT_HORLBECK_ASSAY,
+            raw_replicate or DEFAULT_HORLBECK_REPLICATE,
+        )
     df = read_table(path, sep=sep)
     missing = [col for col in [gene_a_col, gene_b_col, gi_col] if col not in df.columns]
     if missing:
-        raise ValueError(f"Missing columns in GI map: {missing}")
+        return load_horlbeck_raw(
+            path,
+            raw_cell_line or DEFAULT_HORLBECK_CELL_LINE,
+            raw_assay or DEFAULT_HORLBECK_ASSAY,
+            raw_replicate or DEFAULT_HORLBECK_REPLICATE,
+        )
     df = df.copy()
     df = canonicalize_pairs(df, gene_a_col, gene_b_col)
     df[gi_col] = pd.to_numeric(df[gi_col], errors="coerce")
@@ -511,44 +632,204 @@ def parse_args():
         description="Active learning for bulk CRISPR epistasis"
     )
     parser.add_argument(
-        "--depmap-file", required=True, help="Path to DepMap single-gene effect table"
+        "--depmap-file",
+        default=str(DEFAULT_DEPMAP_PATH),
+        help=(
+            f"Path to DepMap single-gene effect table (default: {DEFAULT_DEPMAP_PATH})"
+        ),
     )
     parser.add_argument(
-        "--gi-file", required=True, help="Path to Horlbeck GI map table"
+        "--gi-file",
+        default=str(DEFAULT_GI_PATH),
+        help=(f"Path to Horlbeck GI map table (default: {DEFAULT_GI_PATH})"),
     )
-    parser.add_argument("--depmap-gene-col", default="gene_name")
-    parser.add_argument("--depmap-effect-col", default="effect")
-    parser.add_argument("--depmap-cell-line-col")
-    parser.add_argument("--depmap-cell-line", default="K562")
-    parser.add_argument("--gi-gene-a-col", default="gene_a")
-    parser.add_argument("--gi-gene-b-col", default="gene_b")
-    parser.add_argument("--gi-score-col", default="gi_score")
-    parser.add_argument("--depmap-sep")
-    parser.add_argument("--gi-sep")
-    parser.add_argument("--output-dir", default="outputs")
-    parser.add_argument("--n-rounds", type=int, default=5)
-    parser.add_argument("--n-init", type=int, default=200)
-    parser.add_argument("--n-query", type=int, default=200)
-    parser.add_argument("--beta", type=float, default=1.0)
-    parser.add_argument("--pool-multiplier", type=int, default=5)
+    parser.add_argument(
+        "--depmap-gene-col",
+        default="gene_name",
+        help="Column name for gene symbols in DepMap table (default: gene_name)",
+    )
+    parser.add_argument(
+        "--depmap-effect-col",
+        default="effect",
+        help="Column name for DepMap single-gene effects (default: effect)",
+    )
+    parser.add_argument(
+        "--depmap-cell-line-col",
+        help="Optional column name for cell line filtering in DepMap table",
+    )
+    parser.add_argument(
+        "--depmap-cell-line",
+        default="K562",
+        help=(
+            "Cell line to filter DepMap table when cell-line column is provided "
+            "or when using the DepMap matrix (default: K562)"
+        ),
+    )
+    parser.add_argument(
+        "--gi-gene-a-col",
+        default="gene_a",
+        help="Column name for first gene in GI map (default: gene_a)",
+    )
+    parser.add_argument(
+        "--gi-gene-b-col",
+        default="gene_b",
+        help="Column name for second gene in GI map (default: gene_b)",
+    )
+    parser.add_argument(
+        "--gi-score-col",
+        default="gi_score",
+        help="Column name for GI score in GI map (default: gi_score)",
+    )
+    parser.add_argument(
+        "--gi-raw-cell-line",
+        default=DEFAULT_HORLBECK_CELL_LINE,
+        help=(
+            "Cell line label when parsing Horlbeck raw phenotypes "
+            f"(default: {DEFAULT_HORLBECK_CELL_LINE})"
+        ),
+    )
+    parser.add_argument(
+        "--gi-raw-assay",
+        default=DEFAULT_HORLBECK_ASSAY,
+        help=(
+            "Assay label when parsing Horlbeck raw phenotypes "
+            f"(default: {DEFAULT_HORLBECK_ASSAY})"
+        ),
+    )
+    parser.add_argument(
+        "--gi-raw-replicate",
+        default=DEFAULT_HORLBECK_REPLICATE,
+        help=(
+            "Replicate label when parsing Horlbeck raw phenotypes "
+            f"(default: {DEFAULT_HORLBECK_REPLICATE})"
+        ),
+    )
+    parser.add_argument(
+        "--depmap-sep",
+        help="Optional delimiter override for DepMap table (otherwise inferred)",
+    )
+    parser.add_argument(
+        "--gi-sep",
+        help="Optional delimiter override for GI map table (otherwise inferred)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="outputs",
+        help="Output directory for rounds, metrics, selected pairs, and config (default: outputs)",
+    )
+    parser.add_argument(
+        "--n-rounds",
+        type=int,
+        default=5,
+        help="Number of active learning rounds (default: 5)",
+    )
+    parser.add_argument(
+        "--n-init",
+        type=int,
+        default=200,
+        help="Number of initially labeled pairs (default: 200)",
+    )
+    parser.add_argument(
+        "--n-query",
+        type=int,
+        default=200,
+        help="Number of pairs to query per round (default: 200)",
+    )
+    parser.add_argument(
+        "--beta",
+        type=float,
+        default=1.0,
+        help="Weight on ensemble uncertainty in acquisition score (default: 1.0)",
+    )
+    parser.add_argument(
+        "--pool-multiplier",
+        type=int,
+        default=5,
+        help="Multiplier for acquisition pool size before diversity selection (default: 5)",
+    )
     parser.add_argument(
         "--diversity",
         choices=["kcenter", "kmeans", "typiclust", "random"],
         default="kcenter",
+        help="Diversity strategy for batch selection (default: kcenter)",
     )
-    parser.add_argument("--hit-threshold", type=float, default=3.0)
-    parser.add_argument("--top-k", type=int, default=50)
-    parser.add_argument("--hidden-dim", type=int, default=128)
-    parser.add_argument("--residual-dim", type=int, default=64)
-    parser.add_argument("--dropout", type=float, default=0.1)
-    parser.add_argument("--epochs", type=int, default=200)
-    parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--weight-decay", type=float, default=1e-4)
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--ensemble-size", type=int, default=5)
-    parser.add_argument("--activation", choices=["relu", "gelu"], default="relu")
-    parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--device", default="cpu")
+    parser.add_argument(
+        "--hit-threshold",
+        type=float,
+        default=3.0,
+        help="Absolute GI score threshold for hit-rate metrics (default: 3.0)",
+    )
+    parser.add_argument(
+        "--top-k",
+        type=int,
+        default=50,
+        help="Top-k size for hit-rate metrics based on predicted magnitude (default: 50)",
+    )
+    parser.add_argument(
+        "--hidden-dim",
+        type=int,
+        default=128,
+        help="Hidden dimension for additive encoder (default: 128)",
+    )
+    parser.add_argument(
+        "--residual-dim",
+        type=int,
+        default=64,
+        help="Hidden dimension for residual MLP (default: 64)",
+    )
+    parser.add_argument(
+        "--dropout",
+        type=float,
+        default=0.1,
+        help="Dropout rate in residual MLP (default: 0.1)",
+    )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=200,
+        help="Training epochs per model per round (default: 200)",
+    )
+    parser.add_argument(
+        "--lr",
+        type=float,
+        default=1e-3,
+        help="Learning rate for optimizer (default: 1e-3)",
+    )
+    parser.add_argument(
+        "--weight-decay",
+        type=float,
+        default=1e-4,
+        help="Weight decay for optimizer (default: 1e-4)",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=256,
+        help="Batch size for model training and inference (default: 256)",
+    )
+    parser.add_argument(
+        "--ensemble-size",
+        type=int,
+        default=5,
+        help="Number of models in the ensemble (default: 5)",
+    )
+    parser.add_argument(
+        "--activation",
+        choices=["relu", "gelu"],
+        default="relu",
+        help="Activation function for encoder and residual MLP (default: relu)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=7,
+        help="Random seed for reproducibility (default: 7)",
+    )
+    parser.add_argument(
+        "--device",
+        default="cpu",
+        help="Torch device string, e.g. cpu or cuda:0 (default: cpu)",
+    )
     return parser.parse_args()
 
 
@@ -571,6 +852,9 @@ def main():
         gene_b_col=args.gi_gene_b_col,
         gi_col=args.gi_score_col,
         sep=args.gi_sep,
+        raw_cell_line=args.gi_raw_cell_line,
+        raw_assay=args.gi_raw_assay,
+        raw_replicate=args.gi_raw_replicate,
     )
     pairs_df, features, gi_scores, linear_baseline = prepare_candidate_pairs(
         effect_df, gi_df

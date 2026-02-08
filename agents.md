@@ -13,6 +13,7 @@ Multiple small CRISPR experiments will be performed in an active learning workfl
 - Use notebooks for exploration and result visualization.
 - Save tutorial analysis outputs under `notebooks/<subfolder>/outputs`.
 - Keep input datasets in the top-level `data/` directory.
+- Include a module-level docstring in Python scripts and provide help text for all `argparse` arguments.
 - Record decisions in `docs/decision-log/`.
 - Keep external credentials out of the repo.
 

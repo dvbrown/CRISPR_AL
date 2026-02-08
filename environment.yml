@@ -1,11 +1,9 @@
 name: crispr-al
 channels:
-  - nvidia
-  - bioconda
-  - pytorch
   - conda-forge
+  - bioconda
 dependencies:
-  - python >=3.10,<=3.13
+  - python =3.11
   - pytorch
   - pip
   - uv

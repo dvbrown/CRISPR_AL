@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.19.8"
+__generated_with = "0.19.9"
 app = marimo.App()
 
 
@@ -80,52 +80,44 @@ def _():
     ROUNDS_PATH = OUTPUT_DIR / "rounds.csv"
     METRICS_PATH = OUTPUT_DIR / "metrics.csv"
     SELECTED_PATH = OUTPUT_DIR / "selected_pairs.csv"
-
-    return (
-        METRICS_PATH,
-        NOTEBOOK_DIR,
-        OUTPUT_DIR,
-        ROUNDS_PATH,
-        SCRIPT_PATH,
-        SELECTED_PATH,
-        np,
-        pd,
-        plt,
-        sns,
-    )
+    return METRICS_PATH, ROUNDS_PATH, SELECTED_PATH, pd
 
 
 @app.cell(hide_code=True)
-def _(ROUNDS_PATH, SCRIPT_PATH, mo):
-    mo.md(
-        f"""
-        ## Running the compute script
-        The active learning loop is executed by a standalone script so that this notebook
-        stays lightweight. Provide your local DepMap and Horlbeck data files:
+def _(mo):
+    mo.md(r"""
+    ## Running the compute script
 
-        ```bash
-        python {SCRIPT_PATH} \
-          --depmap-file /path/to/depmap_single_gene.csv \
-          --gi-file /path/to/horlbeck_gi_map.csv
-        ```
+    The active learning loop is executed by a standalone script so that this notebook stays lightweight. If you downloaded the datasets into the default folders, you can run:
 
-        Expected outputs:
-        - `{ROUNDS_PATH}`
-        - `{ROUNDS_PATH.parent / "metrics.csv"}`
-        - `{ROUNDS_PATH.parent / "selected_pairs.csv"}`
-        """
-    )
+    ```bash
+      python {SCRIPT_PATH}
+    ```
+
+    To override the defaults, provide your local DepMap and Horlbeck data files:
+
+    ```bash
+      python {SCRIPT_PATH} \
+        --depmap-file /path/to/depmap_single_gene.csv \
+        --gi-file /path/to/horlbeck_gi_map.csv
+    ```
+
+    Expected outputs:
+      - `{ROUNDS_PATH}`
+      - `{ROUNDS_PATH.parent / "metrics.csv"}`
+      - `{ROUNDS_PATH.parent / "selected_pairs.csv"}`
+    """)
     return
 
 
-@app.cell(hide_code=True)
-def _(SCRIPT_PATH, mo):
-    mo.md(
-        f"""
-        ### Notes for running scripts
-        - Run commands from the repository root so relative paths resolve correctly.
-        - If you want to keep outputs in a different folder, pass `--output-dir`.
-        - The script auto-detects CSV vs TSV by file extension; override with `--depmap-sep` or `--gi-sep`.
+@app.cell
+def _(mo):
+    mo.md(r"""
+    ### Notes for running scripts
+
+    - Run commands from the repository root so relative paths resolve correctly.
+    - If you want to keep outputs in a different folder, pass `--output-dir`.
+    - The script auto-detects CSV vs TSV by file extension; override with `--depmap-sep` or `--gi-sep`.
 
         Example with extra options:
         ```bash
@@ -137,8 +129,7 @@ def _(SCRIPT_PATH, mo):
           --n-rounds 6 \
           --output-dir outputs/bulk_epistasis
         ```
-        """
-    )
+    """)
     return
 
 
@@ -154,11 +145,11 @@ def _(METRICS_PATH, ROUNDS_PATH, SELECTED_PATH, mo, pd):
         metrics = pd.read_csv(METRICS_PATH) if METRICS_PATH.exists() else None
         selected = pd.read_csv(SELECTED_PATH) if SELECTED_PATH.exists() else None
         mo.md(f"Loaded {len(rounds)} rounds from `{ROUNDS_PATH}`")
-    return metrics, rounds, selected
+    return
 
 
-@app.cell
-def _(plt, rounds, sns):
+app._unparsable_cell(
+    r"""
     if rounds is None:
         return
     plt.figure(figsize=(7, 4))
@@ -177,11 +168,13 @@ def _(plt, rounds, sns):
     plt.ylabel("Hit rate (|GI| >= threshold)")
     plt.tight_layout()
     plt.show()
-    return
+    """,
+    name="_",
+)
 
 
-@app.cell
-def _(plt, rounds, sns):
+app._unparsable_cell(
+    r"""
     if rounds is None:
         return
     plt.figure(figsize=(7, 4))
@@ -191,15 +184,19 @@ def _(plt, rounds, sns):
     plt.ylabel("Pearson r")
     plt.tight_layout()
     plt.show()
-    return
+    """,
+    name="_",
+)
 
 
-@app.cell
-def _(selected):
+app._unparsable_cell(
+    r"""
     if selected is None:
         return
     selected.head(10)
-    return
+    """,
+    name="_",
+)
 
 
 @app.cell(hide_code=True)
