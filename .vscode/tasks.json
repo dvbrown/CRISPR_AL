@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Marimo: Edit Active Notebook (Watch, micromamba)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "eval \"$(${workspaceFolder}/.local/bin/micromamba shell hook --shell bash 2>/dev/null || /home/dandroid/.local/bin/micromamba shell hook --shell bash)\" && micromamba activate ${workspaceFolder}/.micromamba/envs/crispr-al && marimo edit --watch \"${file}\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": false
+      },
+      "runOptions": {
+        "reevaluateOnRerun": true
+      }
+    }
+  ]
+}

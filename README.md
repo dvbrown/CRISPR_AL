@@ -51,3 +51,22 @@ micromamba create -f environment.yml -p .micromamba/envs/crispr-al
 micromamba activate .micromamba/envs/crispr-al
 python -m ipykernel install --user --name crispr-al --display-name "Python (crispr-al)"
 ```
+
+### Launch a marimo notebook in an external browser
+
+From a terminal:
+```bash
+micromamba activate .micromamba/envs/crispr-al
+marimo edit --watch notebooks/scanpy/scanpy_anndata_tutorial.py
+```
+
+Notes:
+- Do not pass `--headless`; marimo will open in your system browser.
+- If the browser does not auto-open, use the `http://127.0.0.1:<port>` URL printed in the terminal.
+
+From VS Code (task):
+1. Open the notebook file you want to run.
+2. Run `Tasks: Run Task`.
+3. Choose `Marimo: Edit Active Notebook (Watch, micromamba)`.
+
+This task activates `.micromamba/envs/crispr-al` and launches `marimo edit --watch "${file}"`.
