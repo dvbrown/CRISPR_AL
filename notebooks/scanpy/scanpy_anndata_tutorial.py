@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.19.8"
-app = marimo.App()
+app = marimo.App(width="medium")
 
 
 @app.cell
@@ -53,10 +53,22 @@ def _():
 
 @app.cell
 def _(Path):
-    DATA_PATH = Path(
-        "../../data/real/k562_essential_perturb_seq/v2025-09-03/replogle_k562_essential_perturbation.h5ad"
-    ).resolve()
-    N_CELLS = 10_000
+    rel_data_path = Path(
+        "data/real/k562_essential_perturb_seq/v2025-09-03/replogle_k562_essential_perturbation.h5ad"
+    )
+    cwd = Path.cwd().resolve()
+    for base in [cwd, *cwd.parents]:
+        candidate = (base / rel_data_path).resolve()
+        if candidate.exists():
+            DATA_PATH = candidate
+            break
+    else:
+        raise FileNotFoundError(
+            "Could not find the tutorial dataset. Expected to find "
+            f"`{rel_data_path}` from the current working directory or one of its parents. "
+            f"Current working directory: `{cwd}`."
+        )
+    N_CELLS = 1000
     RANDOM_SEED = 7
     return DATA_PATH, N_CELLS, RANDOM_SEED
 
@@ -107,6 +119,11 @@ def _(adata, display):
     print(f"shape: {adata.shape}")
     print(f"X type: {type(adata.X)}")
     display(adata.obs.head())
+    return
+
+
+@app.cell
+def _(adata, display):
     display(adata.var.head())
     print(f"obs columns: {list(adata.obs.columns)}")
     print(f"var columns: {list(adata.var.columns)}")
@@ -170,7 +187,7 @@ def _(mo):
 @app.cell
 def _(adata):
     def find_guide_columns(df):
-        keywords = ["guide", "grna", "sgrna", "barcode", "sg"]
+        keywords = ["guide", "grna", "sgrna", "barcode", "sg", "condition"]
         return [
             col
             for col in df.columns
@@ -313,8 +330,9 @@ def _(adata_proc, pert_col_1, sp):
     if sp.issparse(X):
         X = X.tocsr()
     if "split" in adata_proc.obs.columns:
-        train_mask = adata_proc.obs["split"] == "train"
-        test_mask = adata_proc.obs["split"] == "test"
+        split = adata_proc.obs["split"].astype(str).values
+        train_mask = split == "train"
+        test_mask = split == "test"
         X_train = X[train_mask]
         y_train = y[train_mask]
         X_test = X[test_mask]
@@ -358,18 +376,8 @@ def _(adata_proc, pd, pert_col_1, sp):
         expr = expr.toarray()
     expr_df = pd.DataFrame(expr, columns=genes, index=adata_proc.obs_names)
     expr_df["condition"] = adata_proc.obs[pert_col_1].values
-    pseudobulk = expr_df.groupby("condition")[genes].mean()
+    pseudobulk = expr_df.groupby("condition")[genes].sum()
     pseudobulk.head()
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Saving derived data
-
-    Save processed data (for example, sampled cells plus normalized layers) using `write`. Adjust the output path as needed.
-    """)
     return
 
 

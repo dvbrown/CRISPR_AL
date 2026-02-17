@@ -104,10 +104,45 @@ def _():
 
 
 @app.cell
-def _(Path, sc):
-    DATA_PATH = Path("../../data/real/k562_essential_perturb_seq/v2025-09-03/replogle_k562_essential_perturbation.h5ad").resolve()
+def _():
+    N_CELLS = 1000
+    RANDOM_SEED = 7
+    return N_CELLS, RANDOM_SEED
 
-    adata = sc.read_h5ad(DATA_PATH)
+
+@app.cell
+def _(N_CELLS, Path, RANDOM_SEED, np, sc):
+    rel_data_path = Path(
+        "data/real/k562_essential_perturb_seq/v2025-09-03/replogle_k562_essential_perturbation.h5ad"
+    )
+    cwd = Path.cwd().resolve()
+    for base in [cwd, *cwd.parents]:
+        candidate = (base / rel_data_path).resolve()
+        if candidate.exists():
+            DATA_PATH = candidate
+            break
+    else:
+        raise FileNotFoundError(
+            "Could not find the tutorial dataset. Expected to find "
+            f"`{rel_data_path}` from the current working directory or one of its parents. "
+            f"Current working directory: `{cwd}`."
+        )
+
+    if N_CELLS <= 0:
+        raise ValueError("N_CELLS must be > 0.")
+
+    adata_backed = sc.read_h5ad(DATA_PATH, backed="r")
+    try:
+        n_total = adata_backed.n_obs
+        n_sample = min(int(N_CELLS), n_total)
+        rng = np.random.default_rng(RANDOM_SEED)
+        sample_idx = np.sort(rng.choice(n_total, size=n_sample, replace=False))
+        adata = adata_backed[sample_idx].to_memory()
+    finally:
+        if getattr(adata_backed, "isbacked", False):
+            adata_backed.file.close()
+
+    print(f"Loaded {adata.n_obs:,} sampled cells (of {n_total:,} total) from {DATA_PATH}")
     adata
     return (adata,)
 
