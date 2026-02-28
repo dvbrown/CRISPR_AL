@@ -7,7 +7,6 @@ dependencies:
   - pytorch
   - pip
   - uv
-  - marimo
   - numpy
   - pandas
   - scipy
@@ -20,7 +19,6 @@ dependencies:
   - scanpy
   - tqdm
   - joblib
-  - jupyterlab
-  - notebook
-  - ipykernel
-  - ipywidgets
+  - plotnine
+  - pip:
+    - marimo

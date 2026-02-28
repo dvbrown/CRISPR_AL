@@ -2,25 +2,58 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Marimo: Edit Active Notebook (Watch, micromamba)",
+      "label": "Marimo: Edit Current File",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-lc",
-        "eval \"$(${workspaceFolder}/.local/bin/micromamba shell hook --shell bash 2>/dev/null || /home/dandroid/.local/bin/micromamba shell hook --shell bash)\" && micromamba activate ${workspaceFolder}/.micromamba/envs/crispr-al && marimo edit --watch \"${file}\""
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
+      "command": "source scripts/activate_env.sh && marimo edit --watch --port 0 ${file}",
       "isBackground": true,
-      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 99
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Starting marimo.*$",
+          "endsPattern": "^.*Server is running.*$|^.*Uvicorn running.*$|^.*Running at.*$"
+        }
+      },
       "presentation": {
         "reveal": "always",
-        "panel": "dedicated",
-        "clear": false
+        "panel": "new",
+        "showReuseMessage": false
       },
-      "runOptions": {
-        "reevaluateOnRerun": true
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Marimo: Edit Headless (Remote)",
+      "type": "shell",
+      "command": "source scripts/activate_env.sh && marimo edit ${file} --headless --port 2718 --host 0.0.0.0",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Starting marimo.*$",
+          "endsPattern": "^.*Server is running.*$|^.*Uvicorn running.*$"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "showReuseMessage": false
       }
     }
   ]
