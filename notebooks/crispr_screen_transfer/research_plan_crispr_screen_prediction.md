@@ -68,23 +68,23 @@ Genome-wide venetoclax CRISPR screen
 
 #### Design B: Cross-Screen Transfer (Different Dataset)
 
-**Concept**: Train on a focused screen from one study and predict genome-wide results from another study.
+**Concept**: Train on 2,000 randomly sampled genes from Chen 2019 → predict Sharon 2019 (and vice versa). Tests cross-study generalization between two independent genome-wide screens on related but distinct cell lines.
 
 ```
-Screen A (Focused)              Screen B (Genome-wide)
-~2,000 genes                    ~18,000 genes
-Dataset 1                       Dataset 2
+Chen 2019 (MOLM-13)             Sharon 2019 (MOLM-13-R1)
+~19,115 genes                   ~17,237 genes
        │                              │
-       ▼                              ▼
-  Training data               Ground truth
+  Sample 2,000                   Ground truth
        │                              │
+       ▼                              │
+  Training data                       │
        └──────── Model ───────────────┘
                    │
                    ▼
-       Evaluate transferability
+       Evaluate cross-study transferability
 ```
 
-**What this tests**: Can results from one venetoclax screen generalize to predict another independent screen?
+**What this tests**: Can results from one venetoclax screen generalize to predict another independent screen across two related but distinct cell line contexts?
 
 **Strengths**:
 - Tests real-world scenario (use published data to predict new experiments)
@@ -100,9 +100,8 @@ Dataset 1                       Dataset 2
 
 | Study | Cell Lines | Library Size | Condition | Data Availability |
 |-------|-----------|--------------|-----------|-------------------|
-| ZNF740 study (Zhang et al. 2024) | OCI-AML2, MOLM-13 | 1,426 genes (7 sgRNAs/gene) | Venetoclax vs DMSO | GEO: GSE267342 |
-| Chen et al. 2019 | AML cells | Genome-wide | Venetoclax (mitochondrial targeting) | BioGRID ORCS |
-| Sharon et al. 2019 | MOLM-13 | Genome-wide | Venetoclax (mitochondrial translation) | BioGRID ORCS |
+| Chen et al. 2019 | MOLM-13 | Genome-wide (~19,115 genes) | Venetoclax (mitochondrial targeting) | BioGRID ORCS |
+| Sharon et al. 2019 | MOLM-13-R1 | Genome-wide (~17,237 genes) | Venetoclax (mitochondrial translation) | BioGRID ORCS |
 
 #### Supporting Datasets
 
@@ -131,10 +130,9 @@ When predicting holdout genes, we will use:
 
 1. **Gene expression** (CCLE): Expression level in the cell line
 2. **Pathway membership**: GO terms, KEGG, Reactome
-3. **Protein-protein interactions**: STRING network neighbors
-4. **Co-essentiality**: Correlation with training genes in DepMap
-5. **Gene properties**: Length, GC content, number of isoforms
-6. **Functional annotations**: Essential gene status, druggability
+3. **Co-essentiality**: Correlation with training genes in DepMap
+4. **Gene properties**: Length, GC content, number of isoforms
+5. **Functional annotations**: Essential gene status, druggability
 
 ### Evaluation Metrics
 
@@ -179,14 +177,15 @@ Step 3: Design A - Within-Screen Holdout
 └── Generate confidence intervals
 
 Step 4: Design B - Cross-Screen Transfer
-├── Define training screen (e.g., ZNF740 study, 1,426 genes)
-├── Define test screen (e.g., Sharon et al., genome-wide)
+├── Sample 2,000 genes from Chen 2019 (training screen)
+├── Define test screen (Sharon 2019, genome-wide)
 ├── For overlapping genes:
 │   └── Calculate direct correlation (no model needed)
 ├── For non-overlapping genes:
-│   ├── Train model on training screen
-│   ├── Predict test screen scores
+│   ├── Train model on Chen 2019 training genes
+│   ├── Predict Sharon 2019 scores
 │   └── Evaluate predictions
+├── Repeat with Chen↔Sharon swapped
 └── Compare to random baseline
 
 Step 5: Visualization & Interpretation
@@ -320,13 +319,12 @@ Tools: clusterProfiler, Enrichr, GSEA
 
 ## References
 
-1. Zhang L, et al. (2024). CRISPR screen of venetoclax response-associated genes identifies transcription factor ZNF740 as a key functional regulator. Cell Death & Disease. GEO: GSE267342
-2. Chen X, et al. (2019). Targeting Mitochondrial Structure Sensitizes Acute Myeloid Leukemia to Venetoclax Treatment. Cancer Discovery.
-3. Sharon D, et al. (2019). Inhibition of mitochondrial translation overcomes venetoclax resistance in AML through activation of the integrated stress response. Science Translational Medicine.
-4. Lin S, et al. (2022). An In Vivo CRISPR Screening Platform for Prioritizing Therapeutic Targets in AML. Cancer Discovery.
-5. Uijttewaal ECH, et al. (2024). CRISPR-StAR enables high-resolution genetic screening in complex in vivo models. Nature Biotechnology. GEO: GSE262309
-6. Yan G, et al. (2023). Combined in vitro/in vivo genome-wide CRISPR screens in triple negative breast cancer identify cancer stemness regulators in paclitaxel resistance. Oncogenesis.
-7. He S, et al. (2024). In vivo CRISPR screens identify a dual function of MEN1 in regulating tumor–microenvironment interactions. Nature Genetics. GEO: GSE194349
+1. Chen X, et al. (2019). Targeting Mitochondrial Structure Sensitizes Acute Myeloid Leukemia to Venetoclax Treatment. Cancer Discovery. BioGRID ORCS.
+2. Sharon D, et al. (2019). Inhibition of mitochondrial translation overcomes venetoclax resistance in AML through activation of the integrated stress response. Science Translational Medicine. BioGRID ORCS.
+3. Lin S, et al. (2022). An In Vivo CRISPR Screening Platform for Prioritizing Therapeutic Targets in AML. Cancer Discovery.
+4. Uijttewaal ECH, et al. (2024). CRISPR-StAR enables high-resolution genetic screening in complex in vivo models. Nature Biotechnology. GEO: GSE262309
+5. Yan G, et al. (2023). Combined in vitro/in vivo genome-wide CRISPR screens in triple negative breast cancer identify cancer stemness regulators in paclitaxel resistance. Oncogenesis.
+6. He S, et al. (2024). In vivo CRISPR screens identify a dual function of MEN1 in regulating tumor–microenvironment interactions. Nature Genetics. GEO: GSE194349
 
 ---
 
