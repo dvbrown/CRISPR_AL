@@ -39,7 +39,7 @@ recovery metrics with 95% confidence intervals across iterations.
 | Gene ID canonical key | HGNC symbol (strip ` (ENTREZ_ID)` suffix from DepMap/CCLE columns) |
 | Gene properties features | DROPPED |
 | Druggability features | DROPPED |
-| Output directory | `notebooks/crispr_screen_transfer/artifacts/` |
+| Output directory | `notebooks/crispr_screen_transfer/results/` |
 
 ---
 
