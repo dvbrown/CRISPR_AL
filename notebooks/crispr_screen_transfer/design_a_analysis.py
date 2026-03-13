@@ -44,6 +44,12 @@ def __():
 
 
 @app.cell
+def __():
+    from crispr_al.metrics import bootstrap_ci_bca
+    return (bootstrap_ci_bca,)
+
+
+@app.cell
 def __(Path):
     ARTIFACTS_DIR = Path(__file__).parent / "artifacts"
     RESULTS_DIR = Path(__file__).parent / "results"
@@ -190,24 +196,15 @@ def __(ARTIFACTS_DIR, mo, screen_df):
         all_genes = screen_df["gene_symbol"].tolist()
         splits = generate_splits(all_genes, n_repeats=25, train_size=2000)
 
-        # Save split manifest (without gene lists)
-        manifest_records = []
-        for s in splits:
-            rec = {k: v for k, v in s.items() if k not in ("train_genes", "test_genes")}
-            manifest_records.append(rec)
-
+        from crispr_al.io import save_split_manifest, save_split_files
         import pandas as pd
-        manifest_df = pd.DataFrame(manifest_records)
-        manifest_path = ARTIFACTS_DIR / "split_manifest.csv"
-        manifest_df.to_csv(manifest_path, index=False)
 
-        # Save full splits
+        manifest_path = ARTIFACTS_DIR / "split_manifest.csv"
+        save_split_manifest(splits, str(manifest_path))
+        manifest_df = pd.read_csv(manifest_path)
+
         splits_dir = ARTIFACTS_DIR / "splits"
-        splits_dir.mkdir(parents=True, exist_ok=True)
-        for s in splits:
-            split_file = splits_dir / f"{s['split_id']}.json"
-            with open(split_file, "w") as f:
-                json.dump(s, f)
+        save_split_files(splits, str(splits_dir))
 
         mo.md(f"""
         ✓ Generated **{len(splits)} splits**
@@ -347,7 +344,6 @@ def __(
     train_ridge,
 ):
     import datetime
-    import subprocess
 
     if screen_df is not None and features_df is not None and len(splits) > 0:
         from crispr_al.metrics import (
@@ -356,18 +352,13 @@ def __(
             compute_classification_metrics,
             build_metrics_record,
             validate_metrics_record,
+            flatten_metrics_row,
         )
         from crispr_al.models import predict as model_predict
         from crispr_al.io import save_metrics_json
 
-        try:
-            code_commit = subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"],
-                cwd=str(ARTIFACTS_DIR.parent.parent.parent),
-                stderr=subprocess.DEVNULL,
-            ).decode().strip()
-        except Exception:
-            code_commit = "unknown"
+        from crispr_al.io import get_code_commit
+        code_commit = get_code_commit(cwd=str(ARTIFACTS_DIR.parent.parent.parent))
 
         score_idx2 = screen_df.set_index("gene_symbol")["score_norm"]
         hit_sens_idx = screen_df.set_index("gene_symbol")["is_hit_sensitizer"]
@@ -405,6 +396,9 @@ def __(
             }
             leakage_checks = {
                 "disjoint_gene_label_rows": True,
+                # Refers to StandardScaler fitted on X_train only.
+                # Screen-level z-scoring is pre-registered harmonization done
+                # before split generation and is not a leakage risk.
                 "normalization_fit_on_train_only": True,
                 "split_hash_logged": True,
             }
@@ -435,23 +429,7 @@ def __(
                 save_metrics_json(record, str(json_path))
                 validate_metrics_record(record, str(SCHEMA_PATH))
 
-                row = {
-                    "split_id": split["split_id"],
-                    "model": model_name,
-                    "seed": split["seed"],
-                    "repeat_index": split["repeat_index"],
-                    "pearson": reg["pearson"],
-                    "spearman": reg["spearman"],
-                    "r2": reg["r2"],
-                    "rmse": reg["rmse"],
-                    "mae": reg["mae"],
-                }
-                for km in rank["k_metrics"]:
-                    row[f"precision_at_{km['k']}"] = km["precision_at_k"]
-                    row[f"recall_at_{km['k']}"] = km["recall_at_k"]
-                for lbl in clf["labels"]:
-                    row[f"auroc_{lbl['label']}"] = lbl["auroc"]
-                    row[f"auprc_{lbl['label']}"] = lbl["auprc"]
+                row = {"model": model_name, **flatten_metrics_row(split, reg, rank, clf)}
                 all_results.append(row)
 
             next(progress)
@@ -492,7 +470,6 @@ def __(
         save_metrics_json,
         score_idx2,
         split,
-        subprocess,
         timestamp,
         train_genes_i,
         test_genes_i,
@@ -658,33 +635,35 @@ def __(mo):
     mo.md("""
     ## Section 8: Aggregation & Confidence Intervals
 
-    Bootstrap 1,000× across 25 per-split estimates to compute 95% confidence intervals.
+    Bootstrap 1,000× across 25 per-split estimates to compute 95% split-stability
+    intervals. These quantify variability across different 2,000-gene training
+    samples drawn from the same screen, not population-level sampling uncertainty.
     """)
     return
 
 
 @app.cell
-def __(ARTIFACTS_DIR, RESULTS_DIR, mo, np, pd, results_df):
+def __(ARTIFACTS_DIR, RESULTS_DIR, bootstrap_ci_bca, mo, pd, results_df):
     if results_df is not None:
-        def bootstrap_ci(values, n_bootstrap=1000, alpha=0.05, seed=42):
-            rng = np.random.default_rng(seed)
-            means = [rng.choice(values, size=len(values), replace=True).mean()
-                     for _ in range(n_bootstrap)]
-            lo = np.percentile(means, 100 * alpha / 2)
-            hi = np.percentile(means, 100 * (1 - alpha / 2))
-            return np.mean(values), lo, hi
-
         summary_rows = []
-        metric_cols = ["pearson", "spearman", "r2", "rmse", "mae",
-                       "auroc_sensitizer", "auroc_resistor",
-                       "precision_at_50", "precision_at_100", "precision_at_200", "precision_at_500"]
+        metric_cols = [
+            "pearson", "spearman", "r2", "rmse", "mae",
+            "auroc_sensitizer", "auroc_resistor",
+            "auprc_sensitizer", "auprc_resistor",
+            "precision_at_50", "precision_at_100", "precision_at_200", "precision_at_500",
+            "recall_at_50", "recall_at_100", "recall_at_200", "recall_at_500",
+            "precision_at_50_resistor", "precision_at_100_resistor",
+            "precision_at_200_resistor", "precision_at_500_resistor",
+            "recall_at_50_resistor", "recall_at_100_resistor",
+            "recall_at_200_resistor", "recall_at_500_resistor",
+        ]
 
         for model_name in ["ridge", "rf"]:
             model_df = results_df[results_df["model"] == model_name]
             row = {"model": model_name}
             for col in metric_cols:
                 if col in model_df.columns:
-                    mean, lo, hi = bootstrap_ci(model_df[col].values)
+                    mean, lo, hi = bootstrap_ci_bca(model_df[col].values)
                     row[f"{col}_mean"] = round(mean, 4)
                     row[f"{col}_ci_lo"] = round(lo, 4)
                     row[f"{col}_ci_hi"] = round(hi, 4)
@@ -715,11 +694,8 @@ def __(ARTIFACTS_DIR, RESULTS_DIR, mo, np, pd, results_df):
         mo.md("⚠ No results to aggregate.")
     return (
         available_display,
-        bootstrap_ci,
         col,
         display_cols,
-        lo,
-        mean,
         metric_cols,
         model_df,
         model_name,

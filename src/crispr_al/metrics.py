@@ -1,5 +1,7 @@
-"""Metric computation for Design A."""
+"""Metric computation for Design A and Design B."""
 import json
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr, spearmanr
@@ -7,6 +9,18 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.metrics import roc_auc_score, average_precision_score
 
 K_VALUES = [50, 100, 200, 500]
+
+# Keys serialised from the split dict into every metrics JSON.
+# Must stay aligned with metrics.schema.json $defs.split.properties.
+_SPLIT_KEYS = [
+    "split_id", "generator_id", "family", "aim", "metrics_profile",
+    "seed", "repeat_index", "train_screen_id", "test_screen_id", "split_hash",
+]
+
+# Schema-safe keys forwarded from internal k_metrics rows to JSON output.
+# Internal keys (e.g. precision_at_k_resistor) are stripped here and
+# preserved only in aggregated CSVs.
+_RANKING_KEYS = ("k", "n", "precision_at_k", "recall_at_k")
 
 
 def compute_regression_metrics(y_test: np.ndarray, y_pred: np.ndarray) -> dict:
@@ -30,6 +44,9 @@ def compute_ranking_metrics(
     hit_sensitizer and hit_resistor are boolean arrays aligned with y_pred.
     Returns schema-compliant dict with sensitizer-based precision/recall at each K,
     plus _resistor sub-keys for downstream aggregation.
+
+    When K > len(y_pred), effective n = len(y_pred). Both k (requested) and
+    n (effective) are stored in each row.
     """
     if k_values is None:
         k_values = K_VALUES
@@ -40,15 +57,18 @@ def compute_ranking_metrics(
     n_sensitizers = int(hit_sensitizer.sum())
     n_resistors = int(hit_resistor.sum())
 
+    n_eval = len(y_pred)
     k_metrics = []
     for k in k_values:
-        n_correct_sens = int(hit_sensitizer[sens_order[:k]].sum())
-        n_correct_res = int(hit_resistor[res_order[:k]].sum())
+        n = min(k, n_eval)
+        n_correct_sens = int(hit_sensitizer[sens_order[:n]].sum())
+        n_correct_res = int(hit_resistor[res_order[:n]].sum())
         k_metrics.append({
             "k": k,
-            "precision_at_k": n_correct_sens / k,
+            "n": n,
+            "precision_at_k": n_correct_sens / n,
             "recall_at_k": n_correct_sens / max(n_sensitizers, 1),
-            "precision_at_k_resistor": n_correct_res / k,
+            "precision_at_k_resistor": n_correct_res / n,
             "recall_at_k_resistor": n_correct_res / max(n_resistors, 1),
         })
 
@@ -92,18 +112,14 @@ def build_metrics_record(
     run_id: str,
     timestamp_utc: str,
     code_commit: str,
+    notes: Optional[str] = None,
 ) -> dict:
     """Assemble a complete metrics record matching metrics.schema.json."""
-    _SPLIT_KEYS = [
-        "split_id", "generator_id", "family", "aim", "metrics_profile",
-        "seed", "repeat_index", "train_screen_id", "test_screen_id", "split_hash",
-    ]
-    # Schema-safe ranking: strip any internal keys not in the schema
     ranking_schema = {"k_metrics": [
-        {"k": km["k"], "precision_at_k": km["precision_at_k"], "recall_at_k": km["recall_at_k"]}
+        {key: km[key] for key in _RANKING_KEYS if key in km}
         for km in ranking["k_metrics"]
     ]}
-    return {
+    record = {
         "schema_version": "1.0.0",
         "run_id": run_id,
         "timestamp_utc": timestamp_utc,
@@ -117,6 +133,64 @@ def build_metrics_record(
             "classification": classification,
         },
     }
+    if notes is not None:
+        record["notes"] = notes
+    return record
+
+
+def flatten_metrics_row(split: dict, reg: dict, rank: dict, clf: dict) -> dict:
+    """Flatten per-split metrics into a single CSV-friendly dict.
+
+    Includes split metadata (split_id, seed, repeat_index), all regression
+    metrics, precision/recall at each K for sensitizer and resistor, and
+    AUROC/AUPRC per label. Safe to call with or without repeat_index.
+    """
+    row: dict = {
+        "split_id": split["split_id"],
+        "seed": split["seed"],
+        "repeat_index": split.get("repeat_index"),
+    }
+    row.update({k: reg[k] for k in ("pearson", "spearman", "r2", "rmse", "mae") if k in reg})
+    for km in rank["k_metrics"]:
+        k = km["k"]
+        row[f"precision_at_{k}"] = km["precision_at_k"]
+        row[f"recall_at_{k}"] = km["recall_at_k"]
+        if "precision_at_k_resistor" in km:
+            row[f"precision_at_{k}_resistor"] = km["precision_at_k_resistor"]
+            row[f"recall_at_{k}_resistor"] = km["recall_at_k_resistor"]
+    for lbl in clf["labels"]:
+        row[f"auroc_{lbl['label']}"] = lbl["auroc"]
+        row[f"auprc_{lbl['label']}"] = lbl["auprc"]
+    return row
+
+
+def bootstrap_ci_bca(
+    values,
+    n_bootstrap: int = 1000,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> tuple:
+    """Compute BCa bootstrap confidence interval for the mean.
+
+    Returns (mean, ci_low, ci_high). Interprets the n input values as
+    split-stability estimates (resamples across splits, not iid observations).
+    BCa corrects for bias and skewness in the bootstrap distribution.
+    """
+    from scipy.stats import bootstrap as scipy_bootstrap
+    values = np.asarray(values, dtype=float)
+    result = scipy_bootstrap(
+        (values,),
+        np.mean,
+        n_resamples=n_bootstrap,
+        confidence_level=1.0 - alpha,
+        method="BCa",
+        random_state=seed,
+    )
+    return (
+        float(np.mean(values)),
+        float(result.confidence_interval.low),
+        float(result.confidence_interval.high),
+    )
 
 
 def validate_metrics_record(record: dict, schema_path: str) -> None:

@@ -118,6 +118,80 @@ def test_build_metrics_record_keys():
     assert record["split"]["split_hash"] == "abcd1234ef567890"
 
 
+def test_ranking_metrics_n_field(random_pred):
+    """n field (effective evaluated count) is present in every k_metric_row."""
+    y_test, y_pred, hit_sens, hit_res = random_pred
+    result = compute_ranking_metrics(y_pred, hit_sens, hit_res)
+    for row in result["k_metrics"]:
+        assert "n" in row, "n field must be present"
+        assert row["n"] <= row["k"]
+        assert row["n"] >= 1
+
+
+def test_ranking_metrics_k_greater_than_n_eval():
+    """When K > n_eval, effective n is capped at n_eval."""
+    rng = np.random.default_rng(5)
+    n_eval = 30   # smaller than any K in K_VALUES
+    y_pred = rng.normal(0, 1, n_eval)
+    hit_sens = y_pred < -0.5
+    hit_res = y_pred > 0.5
+    result = compute_ranking_metrics(y_pred, hit_sens, hit_res, k_values=[50, 100])
+    for row in result["k_metrics"]:
+        assert row["n"] == n_eval, f"Expected n={n_eval}, got {row['n']}"
+        assert row["precision_at_k"] == pytest.approx(
+            hit_sens[np.argsort(y_pred)[:n_eval]].sum() / n_eval
+        )
+
+
+def test_build_metrics_record_n_in_schema_output():
+    """build_metrics_record preserves n field in ranking k_metrics output."""
+    split = {
+        "split_id": "xfer_001",
+        "generator_id": "aim1_cross_screen_transfer",
+        "family": "context_zeroshot",
+        "aim": "aim1_venetoclax",
+        "metrics_profile": "aim1_transfer",
+        "seed": 21001,
+        "repeat_index": 1,
+        "train_screen_id": "chen2019_1393",
+        "test_screen_id": "sharon2019_1402",
+        "split_hash": "abcd1234ef567890",
+    }
+    data_counts = {
+        "train_row_count": 2000,
+        "test_row_count": 15400,
+        "n_unique_train_genes": 2000,
+        "n_unique_test_genes": 15400,
+        "n_overlap_genes_train_test": 0,
+        "n_test_zero_imputed_features": 139,
+    }
+    leakage_checks = {
+        "disjoint_gene_label_rows": True,
+        "normalization_fit_on_train_only": True,
+        "split_hash_logged": True,
+    }
+    regression = {"pearson": 0.3, "spearman": 0.28, "r2": 0.09, "rmse": 1.1, "mae": 0.85}
+    ranking = {"k_metrics": [
+        {"k": 50, "n": 50, "precision_at_k": 0.2, "recall_at_k": 0.1,
+         "precision_at_k_resistor": 0.1, "recall_at_k_resistor": 0.05},
+    ]}
+    classification = {"labels": [
+        {"label": "sensitizer", "auroc": 0.65, "auprc": 0.15, "positive_rate": 0.05},
+        {"label": "resistor",   "auroc": 0.60, "auprc": 0.10, "positive_rate": 0.05},
+    ]}
+    record = build_metrics_record(
+        split, data_counts, leakage_checks, regression, ranking, classification,
+        run_id="xfer_001_ridge",
+        timestamp_utc="2026-03-13T00:00:00Z",
+        code_commit="abcdef1",
+    )
+    # n should be preserved; internal resistor keys should be stripped
+    row = record["metrics"]["ranking"]["k_metrics"][0]
+    assert "n" in row
+    assert row["n"] == 50
+    assert "precision_at_k_resistor" not in row
+
+
 def test_validate_metrics_record(tmp_path):
     """Test that a valid record passes schema validation."""
     import json
@@ -163,6 +237,107 @@ def test_validate_metrics_record(tmp_path):
     record = build_metrics_record(
         split, data_counts, leakage_checks, regression, ranking, classification,
         run_id="aim1_random_chen2019_1393_r001_ridge",
+        timestamp_utc="2026-03-13T00:00:00Z",
+        code_commit="abcdef1",
+    )
+    validate_metrics_record(record, schema_path)
+
+
+def test_validate_context_zeroshot_schema():
+    """context_zeroshot family with cross-screen IDs passes schema validation."""
+    schema_path = "/vast/projects/G000448_Protein_Design/Repos/CRISPR_AL/notebooks/crispr_screen_transfer/metrics.schema.json"
+    if not os.path.exists(schema_path):
+        pytest.skip("Schema file not found")
+
+    split = {
+        "split_id": "aim1_xfer_chen2019_1393_to_sharon2019_1402_r001",
+        "generator_id": "aim1_cross_screen_transfer",
+        "family": "context_zeroshot",
+        "aim": "aim1_venetoclax",
+        "metrics_profile": "aim1_transfer",
+        "seed": 21001,
+        "repeat_index": 1,
+        "train_screen_id": "chen2019_1393",
+        "test_screen_id": "sharon2019_1402",
+        "split_hash": "abcd1234ef567890",
+    }
+    data_counts = {
+        "train_row_count": 2000,
+        "test_row_count": 15400,
+        "n_unique_train_genes": 2000,
+        "n_unique_test_genes": 15400,
+        "n_overlap_genes_train_test": 0,
+        "n_test_zero_imputed_features": 139,
+    }
+    leakage_checks = {
+        "disjoint_gene_label_rows": True,
+        "normalization_fit_on_train_only": True,
+        "split_hash_logged": True,
+    }
+    regression = {"pearson": 0.3, "spearman": 0.28, "r2": 0.09, "rmse": 1.1, "mae": 0.85}
+    ranking = {"k_metrics": [
+        {"k": 50,  "n": 50,  "precision_at_k": 0.2,  "recall_at_k": 0.1},
+        {"k": 100, "n": 100, "precision_at_k": 0.18, "recall_at_k": 0.18},
+        {"k": 200, "n": 200, "precision_at_k": 0.15, "recall_at_k": 0.3},
+        {"k": 500, "n": 500, "precision_at_k": 0.1,  "recall_at_k": 0.5},
+    ]}
+    classification = {"labels": [
+        {"label": "sensitizer", "auroc": 0.65, "auprc": 0.15, "positive_rate": 0.05},
+        {"label": "resistor",   "auroc": 0.60, "auprc": 0.10, "positive_rate": 0.05},
+    ]}
+    record = build_metrics_record(
+        split, data_counts, leakage_checks, regression, ranking, classification,
+        run_id="aim1_xfer_chen2019_1393_to_sharon2019_1402_r001_ridge",
+        timestamp_utc="2026-03-13T00:00:00Z",
+        code_commit="abcdef1",
+    )
+    validate_metrics_record(record, schema_path)
+
+
+def test_validate_overlap_baseline_schema():
+    """Overlap baseline record (seed=0, no repeat_index) passes schema validation."""
+    schema_path = "/vast/projects/G000448_Protein_Design/Repos/CRISPR_AL/notebooks/crispr_screen_transfer/metrics.schema.json"
+    if not os.path.exists(schema_path):
+        pytest.skip("Schema file not found")
+
+    split = {
+        "split_id": "aim1_overlap_chen2019_1393_to_sharon2019_1402",
+        "generator_id": "aim1_overlap_baseline",
+        "family": "context_zeroshot",
+        "aim": "aim1_venetoclax",
+        "metrics_profile": "aim1_transfer",
+        "seed": 0,
+        "train_screen_id": "chen2019_1393",
+        "test_screen_id": "sharon2019_1402",
+        "split_hash": "abcd1234ef567890",
+    }
+    data_counts = {
+        "train_row_count": 17091,
+        "test_row_count": 17091,
+        "n_unique_train_genes": 17091,
+        "n_unique_test_genes": 17091,
+        "n_overlap_genes_train_test": 17091,
+    }
+    leakage_checks = {
+        "disjoint_gene_label_rows": True,
+        "normalization_fit_on_train_only": True,
+        "split_hash_logged": True,
+        "details": "Only precomputed screen-wise harmonization used; no StandardScaler fitted.",
+    }
+    regression = {"pearson": 0.45, "spearman": 0.42, "r2": 0.2, "rmse": 0.9, "mae": 0.7}
+    ranking = {"k_metrics": [
+        {"k": 50,  "n": 50,  "precision_at_k": 0.25, "recall_at_k": 0.07},
+        {"k": 100, "n": 100, "precision_at_k": 0.22, "recall_at_k": 0.13},
+        {"k": 200, "n": 200, "precision_at_k": 0.18, "recall_at_k": 0.21},
+        {"k": 500, "n": 500, "precision_at_k": 0.14, "recall_at_k": 0.41},
+    ]}
+    classification = {"labels": [
+        {"label": "sensitizer", "auroc": 0.70, "auprc": 0.20, "positive_rate": 0.05},
+        {"label": "resistor",   "auroc": 0.65, "auprc": 0.15, "positive_rate": 0.05},
+    ]}
+    record = build_metrics_record(
+        split, data_counts, leakage_checks, regression, ranking, classification,
+        run_id="aim1_overlap_chen2019_1393_to_sharon2019_1402",
         timestamp_utc="2026-03-13T00:00:00Z",
         code_commit="abcdef1",
     )

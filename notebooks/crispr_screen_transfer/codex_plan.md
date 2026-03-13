@@ -83,7 +83,10 @@ Required split families:
 Leakage controls:
 
 - no shared gene-label rows between train and test for a split;
-- no derived normalization statistics computed on held-out test rows;
+- no derived normalization statistics computed on held-out test rows,
+  except for pre-registered per-screen harmonization applied once before split
+  generation to place heterogeneous assay scores on a common scale (for
+  example, Aim 1 within-screen z-scoring used to define `score_norm`);
 - log split hash and random seed for every run.
 
 ## 2. Aim 1: Focused -> Genome-Wide Venetoclax Prediction
