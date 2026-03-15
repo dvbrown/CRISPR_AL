@@ -5,3 +5,19 @@ data/**
 !data/README.md
 
 **/__pycache__/*
+
+# Python packaging
+src/*.egg-info/
+
+# Nextflow runtime
+work/
+.nextflow/
+.nextflow.log*
+**/pipeline_run.log
+**/pipeline_info/
+
+# Generated pipeline artifacts (large, reproducible from source data)
+notebooks/crispr_screen_transfer/artifacts/
+
+# Generated pipeline results (CSVs, PNGs, reports)
+notebooks/crispr_screen_transfer/results/
