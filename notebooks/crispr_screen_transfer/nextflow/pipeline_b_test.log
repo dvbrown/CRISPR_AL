@@ -1,0 +1,445 @@
+[33mNextflow 25.10.4 is available - Please consider updating your version to it(B[m
+
+ N E X T F L O W   ~  version 25.10.0
+
+Launching `main_b.nf` [tiny_curie] DSL2 - revision: 50a4a8a729
+
+[-        ] LOAD_SHARON_SCREEN -
+
+[-        ] LOAD_SHARON_SCREEN      -
+[-        ] GENERATE_CROSS_SPLITS   -
+[-        ] RUN_CROSS_SPLIT         -
+[-        ] RUN_CROSS_BASELINE      -
+[-        ] VALIDATE_SCHEMA_B       -
+[-        ] AGGREGATE_CROSS_RESULTS -
+
+[-        ] LOAD_SHARON_SCREEN       -
+[-        ] GENERATE_CROSS_SPLITS    -
+[-        ] RUN_CROSS_SPLIT          -
+[-        ] RUN_CROSS_BASELINE       -
+[-        ] VALIDATE_SCHEMA_B        -
+[-        ] AGGREGATE_CROSS_RESULTS  -
+[-        ] TRANSFER_CALIBRATION_C2S -
+[-        ] TRANSFER_CALIBRATION_S2C -
+[-        ] SUMMARY_REPORT_B         -
+
+[-        ] LOAD_SHARON_SCREEN       -
+[-        ] GENERATE_CROSS_SPLITS    -
+[-        ] RUN_CROSS_SPLIT          -
+[-        ] RUN_CROSS_BASELINE       -
+[-        ] VALIDATE_SCHEMA_B        -
+[-        ] AGGREGATE_CROSS_RESULTS  -
+[-        ] TRANSFER_CALIBRATION_C2S -
+[-        ] TRANSFER_CALIBRATION_S2C -
+[-        ] SUMMARY_REPORT_B         -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+[-        ] LOAD_SHARON_SCREEN       | 0 of 1
+[-        ] GENERATE_CROSS_SPLITS    -
+[-        ] RUN_CROSS_SPLIT          -
+[-        ] RUN_CROSS_BASELINE       -
+[-        ] VALIDATE_SCHEMA_B        -
+[-        ] AGGREGATE_CROSS_RESULTS  -
+[-        ] TRANSFER_CALIBRATION_C2S -
+[-        ] TRANSFER_CALIBRATION_S2C -
+[-        ] SUMMARY_REPORT_B         -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (1)
+[76/716a2f] LOAD_SHARON_SCREEN (1)   | 0 of 1
+[-        ] GENERATE_CROSS_SPLITS    -
+[-        ] RUN_CROSS_SPLIT          -
+[-        ] RUN_CROSS_BASELINE       -
+[-        ] VALIDATE_SCHEMA_B        -
+[-        ] AGGREGATE_CROSS_RESULTS  -
+[-        ] TRANSFER_CALIBRATION_C2S -
+[-        ] TRANSFER_CALIBRATION_S2C -
+[-        ] SUMMARY_REPORT_B         -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (2)
+[76/716a2f] LOAD_SHARON_SCREEN (1)   | 0 of 1
+[-        ] GENERATE_CROSS_SPLITS    -
+[-        ] RUN_CROSS_SPLIT          -
+[1d/6b6c9d] RUN_CROSS_BASELINE       | 0 of 1
+[-        ] VALIDATE_SCHEMA_B        -
+[-        ] AGGREGATE_CROSS_RESULTS  -
+[-        ] TRANSFER_CALIBRATION_C2S -
+[-        ] TRANSFER_CALIBRATION_S2C -
+[-        ] SUMMARY_REPORT_B         -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (3)
+[76/716a2f] LOAD_SHARON_SCREEN (1)    | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1) | 0 of 1
+[-        ] RUN_CROSS_SPLIT           -
+[1d/6b6c9d] RUN_CROSS_BASELINE        | 0 of 1
+[-        ] VALIDATE_SCHEMA_B         -
+[-        ] AGGREGATE_CROSS_RESULTS   -
+[-        ] TRANSFER_CALIBRATION_C2S  -
+[-        ] TRANSFER_CALIBRATION_S2C  -
+[-        ] SUMMARY_REPORT_B          -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (3)
+[76/716a2f] LOAD_SHARON_SCREEN (1)    | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1) | 0 of 1
+[-        ] RUN_CROSS_SPLIT           -
+[1d/6b6c9d] RUN_CROSS_BASELINE        | 0 of 1
+[-        ] VALIDATE_SCHEMA_B         -
+[-        ] AGGREGATE_CROSS_RESULTS   -
+[-        ] TRANSFER_CALIBRATION_C2S  -
+[-        ] TRANSFER_CALIBRATION_S2C  -
+[-        ] SUMMARY_REPORT_B          -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (4)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 0 of 1
+[5d/ef1783] RUN…haron2019_1402_r001:ridge) | 0 of 4
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 0 of 1
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       -
+[-        ] TRANSFER_CALIBRATION_S2C       -
+[-        ] SUMMARY_REPORT_B               -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (4)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[5d/ef1783] RUN…haron2019_1402_r001:ridge) | 0 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 0 of 1
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (5)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[7d/01bfa4] RUN…o_sharon2019_1402_r001:rf) | 0 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (5)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[7d/01bfa4] RUN…o_sharon2019_1402_r001:rf) | 0 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (6)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[5d/ef1783] RUN…haron2019_1402_r001:ridge) | 1 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (7)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[7d/01bfa4] RUN…o_sharon2019_1402_r001:rf) | 2 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+WARN: There's no process matching config selector: BUILD_FEATURES
+WARN: There's no process matching config selector: RUN_SPLIT
+WARN: There's no process matching config selector: RUN_REDUCED_SPLIT
+WARN: There's no process matching config selector: RUN_ABLATION
+WARN: There's no process matching config selector: TRANSFER_CALIBRATION -- Did you mean: TRANSFER_CALIBRATION_C2S?
+WARN: There's no process matching config selector: AGGREGATE_RESULTS|AGGREGATE_REDUCED|AGGREGATE_ABLATION|SUMMARY_REPORT
+WARN: There's no process matching config selector: RUN_SPLIT|RUN_REDUCED_SPLIT
+
+executor >  local (7)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[7d/01bfa4] RUN…o_sharon2019_1402_r001:rf) | 2 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+
+
+
+
+
+
+
+executor >  local (8)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[12/917fd4] RUN…o_sharon2019_1402_r002:rf) | 3 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+
+
+
+
+
+
+
+executor >  local (9)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[6f/46e7aa] RUN…haron2019_1402_r002:ridge) | 4 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (9)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[6f/46e7aa] RUN…haron2019_1402_r002:ridge) | 4 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (10)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[b0/459272] RUN…_to_chen2019_1393_r001:rf) | 5 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (10)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[d4/66480a] RUN…_chen2019_1393_r001:ridge) | 6 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (11)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 6 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (11)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 6 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[-        ] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (12)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 6 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (12)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[00/1dffe9] RUN…_to_chen2019_1393_r002:rf) | 7 of 8
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              -
+[-        ] AGGREGATE_CROSS_RESULTS        -
+[-        ] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (13)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 8 of 8 ✔
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              | 0 of 1
+[-        ] AGGREGATE_CROSS_RESULTS        | 0 of 1
+[fe/ec3f4b] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 0 of 1
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (14)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 8 of 8 ✔
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[-        ] VALIDATE_SCHEMA_B              | 0 of 1
+[4a/b90708] AGGREGATE_CROSS_RESULTS        | 0 of 1
+[fe/ec3f4b] TRANSFER_CALIBRATION_C2S       | 0 of 1
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 1 of 1 ✔
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (15)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 8 of 8 ✔
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[11/4cb008] VALIDATE_SCHEMA_B              | 0 of 1
+[4a/b90708] AGGREGATE_CROSS_RESULTS        | 0 of 1
+[fe/ec3f4b] TRANSFER_CALIBRATION_C2S       | 1 of 1 ✔
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 1 of 1 ✔
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (15)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 8 of 8 ✔
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[11/4cb008] VALIDATE_SCHEMA_B              | 1 of 1 ✔
+[4a/b90708] AGGREGATE_CROSS_RESULTS        | 0 of 1
+[fe/ec3f4b] TRANSFER_CALIBRATION_C2S       | 1 of 1 ✔
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 1 of 1 ✔
+[-        ] SUMMARY_REPORT_B               -
+
+executor >  local (16)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 8 of 8 ✔
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[11/4cb008] VALIDATE_SCHEMA_B              | 1 of 1 ✔
+[4a/b90708] AGGREGATE_CROSS_RESULTS        | 1 of 1 ✔
+[fe/ec3f4b] TRANSFER_CALIBRATION_C2S       | 1 of 1 ✔
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 1 of 1 ✔
+[73/b8596c] SUMMARY_REPORT_B               | 0 of 1
+
+executor >  local (16)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 8 of 8 ✔
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[11/4cb008] VALIDATE_SCHEMA_B              | 1 of 1 ✔
+[4a/b90708] AGGREGATE_CROSS_RESULTS        | 1 of 1 ✔
+[fe/ec3f4b] TRANSFER_CALIBRATION_C2S       | 1 of 1 ✔
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 1 of 1 ✔
+[73/b8596c] SUMMARY_REPORT_B               | 1 of 1 ✔
+
+executor >  local (16)
+[76/716a2f] LOAD_SHARON_SCREEN (1)         | 1 of 1 ✔
+[3a/ee27b9] GENERATE_CROSS_SPLITS (1)      | 1 of 1 ✔
+[0f/7cdc0c] RUN…_chen2019_1393_r002:ridge) | 8 of 8 ✔
+[1d/6b6c9d] RUN_CROSS_BASELINE             | 1 of 1 ✔
+[11/4cb008] VALIDATE_SCHEMA_B              | 1 of 1 ✔
+[4a/b90708] AGGREGATE_CROSS_RESULTS        | 1 of 1 ✔
+[fe/ec3f4b] TRANSFER_CALIBRATION_C2S       | 1 of 1 ✔
+[d3/f7bfd8] TRANSFER_CALIBRATION_S2C       | 1 of 1 ✔
+[73/b8596c] SUMMARY_REPORT_B               | 1 of 1 ✔
+Completed at: 18-Mar-2026 15:29:06
+Duration    : 1m 43s
+CPU hours   : (a few seconds)
+Succeeded   : 16
+
+
