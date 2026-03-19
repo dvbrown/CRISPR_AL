@@ -60,12 +60,40 @@ Two benchmark designs drive all active development:
 **Design A — within-screen holdout** (`splits.SEED_START = 11001`)
 - Train on 2,000 Chen 2019 genes; predict remaining ~17,000 held-out genes from the same screen.
 - 25 repeats → 50 metric JSON files (25 × 2 models).
+- Nextflow pipeline: `notebooks/crispr_screen_transfer/nextflow/pipeline_a/`
+- Results: `notebooks/crispr_screen_transfer/results/design_a/`
 
 **Design B — cross-screen transfer** (`splits.XFER_SEED_START = 21001` / `XFER_SEED_START_REVERSE = 22001`)
 - Train on 2,000 genes from one screen; predict all genes in the other screen.
 - Chen → Sharon: 30 repeats; Sharon → Chen: 30 repeats; plus 2 overlap-only baselines.
 - 122 total output files (60 splits × 2 models + 2 baselines + 6 aggregated CSVs).
 - Sharon-only genes not in the feature matrix are zero-imputed (not a leakage issue).
+- Nextflow pipeline: `notebooks/crispr_screen_transfer/nextflow/pipeline_b/`
+- Results: `notebooks/crispr_screen_transfer/results/design_b/`
+
+## Nextflow Pipeline Structure
+
+Each design has its own self-contained pipeline directory:
+
+```
+notebooks/crispr_screen_transfer/nextflow/
+├── pipeline_a/          # Design A pipeline (within-screen holdout)
+│   ├── main.nf
+│   ├── nextflow.config  # results_dir → results/design_a/
+│   ├── conf/
+│   └── scripts/
+└── pipeline_b/          # Design B pipeline (cross-screen transfer)
+    ├── main.nf
+    ├── nextflow.config  # results_dir → results/design_b/
+    ├── conf/
+    └── scripts/
+```
+
+Run pipelines from their respective subdirectory:
+```bash
+cd notebooks/crispr_screen_transfer/nextflow/pipeline_a && nextflow run main.nf -profile slurm
+cd notebooks/crispr_screen_transfer/nextflow/pipeline_b && nextflow run main.nf -profile slurm
+```
 
 ## Default Behaviors
 - Prioritize target selection logic and ranking for perturbation campaigns.
