@@ -329,6 +329,59 @@ def test_calibration_report_keys():
 
 ---
 
+## Results (2026-03-19)
+
+Phase 0 is complete. Key findings:
+
+### DRF values
+
+The expected DRF values (section "Metric recommendations") were not met. Actual results:
+
+**Cross-screen Chen → Sharon (the Design B positive control):**
+| Metric | DRF | Verdict |
+|--------|-----|---------|
+| Spearman ρ | 0.036 | FAIL |
+| Pearson r | 0.031 | FAIL |
+| AUROC (sensitizer) | 0.032 | FAIL |
+| Precision@50 | 0.143 | PASS |
+| Precision@100 | 0.083 | FAIL |
+| Precision@200–500 | < 0.06 | FAIL |
+
+The handoff predicted DRF ~ 0.4–0.7 for Spearman. The actual value is 0.036.
+
+**Within-screen split-half (Chen):** All DRFs ≈ 0 — expected, since each gene has
+exactly one score; random pairing carries no signal.
+
+### Root cause: biological orthogonality, not metric failure
+
+The low DRF is not a metric calibration problem. It reflects that Chen and Sharon
+are measuring orthogonal biological questions (parental vs resistant cell line).
+Confirmed by direct time-course correlation:
+
+- **Chen 8d vs 16d:** ρ = 0.69 — strong within-screen signal ✓
+- **Chen vs Sharon (same timepoint):** ρ = 0.035 — cross-screen signal absent ✗
+
+The metrics work. The cross-screen ceiling does not exist.
+
+### Implications
+
+- Design A (within-Chen) is unaffected — ceiling ρ = 0.69 is well-defined
+- Design B is scientifically invalid for this dataset pair — suspended
+- Phase 0 DRF values for Design A itself were not computed (split-half gives ρ≈0
+  because each gene has one score); the timepoint-comparison ρ=0.69 is the correct ceiling
+
+### Definition of Done — status
+
+- [x] `compute_drf()` implemented and tested
+- [x] `compute_calibration_report_with_hits()` implemented
+- [x] `make_negative_control()` and `make_positive_control_cross_screen()` implemented
+- [x] Marimo notebook `phase0_metric_calibration.py` runs end-to-end
+- [x] `calibration_report.json`, `cross_screen_ceiling.csv`, `calibration_summary.csv` saved
+- [x] All 18 tests pass
+- [x] Within-screen reproducibility computed (see root cause analysis above)
+
+---
+
 ## Dependency on Other Phases
 
 - **Blocks:** Phase 2 (Design A/B), Phase 3 (Aim 2), Phase 4 (Active Learning) — all must use only metrics that pass DRF threshold

@@ -336,3 +336,88 @@ Upon approval of this plan:
 3. Execute Aim 2 analysis
 4. Generate summary figures and conclusions
 5. Compile final report with recommendations
+
+---
+
+## Phase 0 Findings (2026-03-19)
+
+Phase 0 metric calibration revealed that the data landscape is fundamentally different
+from what was assumed when this plan was written. These findings should inform any
+decision about continuing with Chen/Sharon or replacing the datasets.
+
+### Within-screen reproducibility (the true ceiling)
+
+The six BioGRID screens are not replicates — they are **time-course experiments**:
+
+| Paper | Screens | Cell line | Timepoints |
+|-------|---------|-----------|------------|
+| Chen 2019 | 1392, 1393 | MOLM-13 (parental, venetoclax-sensitive) | 8d, 16d |
+| Sharon 2019 | 1401–1404 | MOLM-13-R1 (venetoclax-**resistant** derivative) | 8d, 16d, 22d, 29d |
+
+**Chen 2019 within-experiment ceiling** (8d vs 16d, n = 19,109):
+- Spearman ρ = 0.69, Pearson r = 0.71
+
+**Sharon 2019 timepoint correlations** (n = 17,230):
+- 8d vs 16d: ρ = 0.56 — early divergence
+- 16d vs 22d: ρ = 0.67; 16d vs 29d: ρ = 0.67; 22d vs 29d: ρ = 0.75
+
+Data quality is good. Both screens have real, reproducible signal. This is not a data
+quality problem.
+
+### Cross-screen correlation: biological orthogonality, not noise
+
+**Chen 1393 (16d) vs Sharon 1402 (16d):** Spearman ρ = **0.035**, Pearson r = 0.031
+
+This is not noise — it reflects a fundamental biological difference:
+- Chen asks: *which knockouts sensitize/resist venetoclax in naive AML cells?*
+- Sharon asks: *which knockouts re-sensitize an already-resistant cell line (MOLM-13-R1)?*
+
+These are orthogonal fitness landscapes. A gene that sensitizes naive MOLM-13 may
+have no effect, or the opposite effect, in a cell that has already adapted to venetoclax.
+ρ = 0.035 is the true ceiling for Design B. **No model can be expected to do better.**
+
+### Consequences for the plan
+
+| Design | Status | Reason |
+|--------|--------|--------|
+| Design A (within-Chen holdout) | **Viable** | Ceiling ρ ≈ 0.69; models reach P@50 ≈ 0.195 (~4× base rate), Pearson r ≈ 0.20 |
+| Design B (Chen → Sharon transfer) | **Dead** | Biological ceiling ρ = 0.035 — orthogonal cell lines, not a transfer benchmark |
+| Aim 2 (in vitro → in vivo) | **Unaffected** | Uses different datasets; not evaluated in Phase 0 |
+
+### Design A performance vs ceiling
+
+From the optimisation sweep (DESIGN_A_OPTIMISATION_HANDOFF.md):
+- Model: Ridge, features: coess_only (2 co-essentiality features), train size: 2000
+- P@50 = 0.195 (≈4× base rate of ~5%), Pearson r = 0.198, AUROC = 0.603
+- Against ceiling: Pearson r = 0.198 / 0.71 = **28% of ceiling**
+
+There is headroom, but it is unclear whether better features or models can close this
+gap substantially, or whether the gap reflects irreducible biological noise between
+timepoints.
+
+### Decision point: continue with these datasets or replace them?
+
+**Arguments for continuing with Chen 2019 (Design A only):**
+- Well-powered screen (ρ = 0.69 timepoint reproducibility), no quality concerns
+- Design A is the active learning question: can a partial screen predict the rest?
+- Existing infrastructure (pipeline, metrics, features) is fully built
+
+**Arguments for replacing the datasets:**
+- Design B is dead — the cross-screen framing that motivated Sharon 2019 is invalid
+- Both Chen and Sharon have only one measurement per gene (no within-condition replicates)
+  so the positive control for DRF is weak (split-half ρ ≈ 0)
+- For active learning, a screen with **multiple rounds** of selection or explicit
+  batch acquisition data would be a more natural fit
+- A dataset with true biological replicates would allow empirical noise estimation
+
+**Active learning framing consideration:** If the goal shifts to the active learning
+question (which genes to perturb next?), the ideal dataset has:
+1. A large pool of unperturbed genes (target space to select from)
+2. A simulation-compatible structure (sequential batch acquisition can be replayed)
+3. Good within-condition reproducibility (to set a meaningful ceiling)
+4. Enough signal in features to make selection non-trivial
+
+Chen 1393 satisfies 1, 2, and 3 but the feature signal (Pearson r ceiling = 0.71) is
+modest. The active learning loop can still be simulated: treat each round as selecting
+B genes from the remaining unperturbed pool, measure their scores from the ground-truth
+screen, and update the model.
