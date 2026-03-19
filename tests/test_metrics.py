@@ -1,5 +1,6 @@
 """Tests for crispr_al.metrics module."""
 import numpy as np
+import pandas as pd
 import pytest
 from crispr_al.metrics import (
     compute_regression_metrics,
@@ -7,6 +8,10 @@ from crispr_al.metrics import (
     compute_classification_metrics,
     build_metrics_record,
     validate_metrics_record,
+    make_negative_control,
+    make_positive_control_cross_screen,
+    compute_drf,
+    compute_calibration_report_with_hits,
     K_VALUES,
 )
 import os
@@ -342,3 +347,82 @@ def test_validate_overlap_baseline_schema():
         code_commit="abcdef1",
     )
     validate_metrics_record(record, schema_path)
+
+
+# ---------------------------------------------------------------------------
+# Phase 0: DRF calibration tests
+# ---------------------------------------------------------------------------
+
+def test_compute_drf_perfect_predictor():
+    """DRF ≈ 1.0 when y_positive_control == y_true."""
+    from scipy.stats import spearmanr
+    rng = np.random.default_rng(0)
+    y = rng.normal(0, 1, 300)
+    y_neg = make_negative_control(y)
+    metric_fn = lambda a, b: float(spearmanr(a, b).statistic)
+    drf = compute_drf(y, y, y_neg, metric_fn)
+    assert drf == pytest.approx(1.0, abs=1e-3)
+
+
+def test_compute_drf_null_predictor():
+    """DRF ≈ 0.0 when positive control == negative control."""
+    from scipy.stats import spearmanr
+    rng = np.random.default_rng(1)
+    y = rng.normal(0, 1, 300)
+    y_neg = make_negative_control(y)
+    metric_fn = lambda a, b: float(spearmanr(a, b).statistic)
+    drf = compute_drf(y, y_neg, y_neg, metric_fn)
+    assert drf == pytest.approx(0.0, abs=1e-3)
+
+
+def test_compute_drf_spearman_fitness_screen():
+    """DRF > 0.1 when positive control has low noise."""
+    from scipy.stats import spearmanr
+    rng = np.random.default_rng(2)
+    y = rng.normal(0, 1, 300)
+    y_pos = y + rng.normal(0, 0.3, 300)
+    y_neg = make_negative_control(y)
+    metric_fn = lambda a, b: float(spearmanr(a, b).statistic)
+    drf = compute_drf(y, y_pos, y_neg, metric_fn)
+    assert drf > 0.1
+
+
+def test_make_negative_control():
+    """Negative control is a constant array equal to mean."""
+    rng = np.random.default_rng(3)
+    y = rng.normal(5, 2, 200)
+    ctrl = make_negative_control(y)
+    assert ctrl.shape == y.shape
+    assert np.all(ctrl == pytest.approx(np.mean(y)))
+
+
+def test_make_positive_control_cross_screen():
+    """Returns only shared genes aligned correctly."""
+    chen = pd.Series({"A": 1.0, "B": 2.0, "C": 3.0, "D": 4.0})
+    sharon = pd.Series({"B": 0.5, "C": 0.6, "D": 0.7, "E": 0.8})
+    y_true, y_pred = make_positive_control_cross_screen(chen, sharon)
+    assert len(y_true) == 3   # B, C, D shared
+    assert len(y_pred) == 3
+    # Values correspond to sharon (y_true) and chen (y_pred) in sorted order
+    shared_sorted = sorted(["B", "C", "D"])
+    np.testing.assert_array_almost_equal(y_true, sharon[shared_sorted].values)
+    np.testing.assert_array_almost_equal(y_pred, chen[shared_sorted].values)
+
+
+def test_calibration_report_with_hits_keys():
+    """All 8 drf_* keys are present in the calibration report."""
+    rng = np.random.default_rng(4)
+    n = 500
+    y = rng.normal(0, 1, n)
+    y_pos = y + rng.normal(0, 0.3, n)
+    y_neg = make_negative_control(y)
+    hit_sens = y < -1.0
+    hit_res = y > 1.5
+    report = compute_calibration_report_with_hits(y, y_pos, y_neg, hit_sens, hit_res)
+    expected_drf_keys = {
+        "drf_spearman", "drf_pearson", "drf_neg_rmse",
+        "drf_auroc_sensitizer",
+        "drf_precision_at_50", "drf_precision_at_100",
+        "drf_precision_at_200", "drf_precision_at_500",
+    }
+    assert expected_drf_keys.issubset(report.keys())

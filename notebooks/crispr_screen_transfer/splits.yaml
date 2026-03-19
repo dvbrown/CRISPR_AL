@@ -1,0 +1,165 @@
+version: 1
+registry_id: crispr_screen_transfer_v1
+description: >
+  Split registry template for codex_plan.md Aim 1 and Aim 2 transfer analyses.
+  Fill screen_ids/study_ids to match locally harmonized tables.
+
+defaults:
+  random_seed: 20260228
+  score_column: score_norm
+  gene_id_column: gene_id
+  context_column: context
+  study_id_column: study_id
+  screen_id_column: screen_id
+  confidence_interval:
+    method: bootstrap
+    n_bootstrap: 1000
+    alpha: 0.05
+  leakage_checks:
+    require_disjoint_gene_label_rows: true
+    require_train_only_normalization_fit: true
+    require_logged_split_hash: true
+
+entities:
+  screens:
+    # Replace with actual identifiers from harmonized dataset tables.
+    focused_venetoclax:
+      - znf740_oci_aml2_focused
+      - znf740_molm13_focused
+    genomewide_venetoclax:
+      - chen2019_aml_genomewide
+      - sharon2019_molm13_genomewide
+    vitro_genomewide:
+      - lin2022_mv411_vitro
+      - crispr_star_yumm1_7_vitro
+      - yan2023_sum159_vitro
+      - he2024_a549_vitro
+    vivo_genomewide:
+      - lin2022_pdx16_01_vivo
+      - crispr_star_yumm1_7_vivo
+      - yan2023_sum159_vivo
+      - he2024_a549_vivo
+  studies:
+    - lin2022
+    - elling2024
+    - yan2023
+    - he2024
+
+metric_profiles:
+  aim1_transfer:
+    task_types: [regression, ranking, classification]
+    regression_metrics: [pearson, spearman, r2, rmse, mae]
+    ranking_metrics:
+      precision_at_k: [50, 100, 200, 500]
+      recall_at_k: [50, 100, 200, 500]
+      cat_at_n: [50, 100, 200, 500]
+    classification_metrics: [auroc, auprc]
+    hit_labels: [sensitizer, resistor]
+  aim2_transfer:
+    task_types: [regression, ranking, classification, set_overlap, calibration]
+    regression_metrics: [pearson, spearman]
+    ranking_metrics:
+      cat_at_n: [50, 100, 200, 500]
+    classification_metrics: [auroc, auprc]
+    set_overlap_metrics: [jaccard_hits]
+    calibration_metrics: [brier, ece]
+    hit_labels: [in_vivo_validated_hit]
+
+split_generators:
+  - generator_id: aim1_random_gene_holdout
+    family: random_gene_holdout
+    aim: aim1_venetoclax
+    metrics_profile: aim1_transfer
+    repeats: 25
+    seed_mode: increment
+    seed_start: 11001
+    train:
+      contexts: [venetoclax]
+      screen_pool_ref: genomewide_venetoclax
+      sampling:
+        unit: gene
+        method: uniform_without_replacement
+        sample_size: 2000
+    test:
+      mode: complement_of_train_genes_within_screen
+    output:
+      split_id_pattern: "aim1_random_{screen_id}_r{repeat:03d}"
+
+  - generator_id: aim1_cross_screen_transfer
+    family: context_zeroshot
+    aim: aim1_venetoclax
+    metrics_profile: aim1_transfer
+    repeats: 30
+    seed_mode: increment
+    seed_start: 21001
+    train:
+      contexts: [venetoclax]
+      screen_pool_ref: genomewide_venetoclax
+    test:
+      contexts: [venetoclax]
+      screen_pool_ref: genomewide_venetoclax
+      require_non_overlap_gene_eval: true
+      also_report_overlap_only_baseline: true
+    output:
+      split_id_pattern: "aim1_xfer_{train_screen}_to_{test_screen}_r{repeat:03d}"
+
+  - generator_id: aim2_study_zeroshot
+    family: study_zeroshot
+    aim: aim2_vitro_to_vivo
+    metrics_profile: aim2_transfer
+    repeats: 20
+    seed_mode: increment
+    seed_start: 31001
+    train:
+      include_contexts: [in_vitro, in_vivo]
+      study_mode: all_except_test_study
+    test:
+      include_contexts: [in_vivo]
+      study_mode: heldout_study
+    output:
+      split_id_pattern: "aim2_loso_{test_study}_r{repeat:03d}"
+
+  - generator_id: aim2_context_fewshot
+    family: fewshot_context
+    aim: aim2_vitro_to_vivo
+    metrics_profile: aim2_transfer
+    repeats: 30
+    seed_mode: increment
+    seed_start: 41001
+    support_sizes: [25, 50, 100]
+    train:
+      include_contexts: [in_vitro]
+      screen_pool_ref: vitro_genomewide
+    adapt:
+      include_contexts: [in_vivo]
+      sampling:
+        unit: gene
+        method: stratified_by_hit_label
+    test:
+      include_contexts: [in_vivo]
+      mode: remaining_genes_after_support
+    output:
+      split_id_pattern: "aim2_fewshot_{test_screen}_n{support_size}_r{repeat:03d}"
+
+run_manifest:
+  required_fields:
+    - run_id
+    - timestamp_utc
+    - code_commit
+    - environment
+    - split_id
+    - split_hash
+    - generator_id
+    - seed
+    - metrics_profile
+    - train_row_count
+    - test_row_count
+    - n_unique_train_genes
+    - n_unique_test_genes
+    - leakage_check_results
+    - metrics_output_path
+
+outputs:
+  split_manifest_path: notebooks/crispr_screen_transfer/artifacts/split_manifest.csv
+  metrics_dir: notebooks/crispr_screen_transfer/artifacts/metrics
+  transfer_matrix_dir: notebooks/crispr_screen_transfer/artifacts/transfer_matrices
