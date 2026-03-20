@@ -1,0 +1,62 @@
+aim1:
+  n_train: 2000
+  n_repeats: 100
+
+  strategies:
+
+    random:
+      function: split_random
+      n_repeats: 100
+      description: "Pure random sampling — baseline"
+
+    reactome_stratified:
+      function: split_reactome_stratified
+      n_repeats: 50
+      params:
+        min_pathway_size: 10
+        max_pathway_size: 500
+      description: "1 gene per qualifying Reactome pathway, random fill"
+
+    hallmark_stratified:
+      function: split_hallmark_stratified
+      n_repeats: 50
+      params:
+        n_per_hallmark: 5
+      description: "5 genes per Hallmark gene set, random fill"
+
+    apoptosis_p53_seeded:
+      function: split_apoptosis_p53_seeded
+      n_repeats: 50
+      arms: [menuetto_nutlin, scherzo_nutlin]
+      params:
+        seed_hallmarks:
+          - HALLMARK_APOPTOSIS
+          - HALLMARK_P53_PATHWAY
+          - HALLMARK_DNA_REPAIR
+          - HALLMARK_G2M_CHECKPOINT
+        max_seed_fraction: 0.20
+      description: "Apoptosis/p53 Hallmark genes seeded, random fill"
+
+    bcl2_seeded:
+      function: split_bcl2_seeded
+      n_repeats: 50
+      arms: [menuetto_s63845, scherzo_s63845]
+      params:
+        seed_hallmarks:
+          - HALLMARK_APOPTOSIS
+          - HALLMARK_TNFA_SIGNALING_VIA_NFKB
+          - HALLMARK_PI3K_AKT_MTOR_SIGNALING
+          - HALLMARK_MYC_TARGETS_V1
+        max_seed_fraction: 0.20
+      description: "BCL-2/survival Hallmark genes seeded, random fill"
+
+    reactome_apoptosis_oversampled:
+      function: split_reactome_apoptosis_oversampled
+      n_repeats: 50
+      arms: [menuetto_nutlin, menuetto_s63845, scherzo_nutlin, scherzo_s63845]
+      params:
+        n_per_apoptosis: 5
+        n_per_other: 1
+        min_pathway_size: 10
+        max_pathway_size: 500
+      description: "Reactome-stratified with 5x oversampling of apoptosis pathways"

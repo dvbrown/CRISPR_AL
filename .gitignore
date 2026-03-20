@@ -21,3 +21,5 @@ notebooks/crispr_screen_transfer/artifacts/
 
 # Generated pipeline results (CSVs, PNGs, reports)
 notebooks/crispr_screen_transfer/results/
+
+*.gz

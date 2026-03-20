@@ -157,6 +157,19 @@ def get_sample_groups():
 
 # ── Step 3: MAGeCK ────────────────────────────────────────────────────────────
 
+def _decompress_gz(src: Path) -> Path:
+    """Decompress a .gz file to RAW_DIR with the .gz suffix stripped.
+    Returns the decompressed path. Skips decompression if already exists."""
+    dest = RAW_DIR / src.stem  # strip .gz
+    if dest.exists():
+        return dest
+    print(f"  decompressing {src.name} → {dest.name} ...")
+    with gzip.open(src, "rb") as f_in, open(dest, "wb") as f_out:
+        import shutil
+        shutil.copyfileobj(f_in, f_out)
+    return dest
+
+
 def run_mageck_jobs(jobs, dry_run=False):
     PROC_DIR.mkdir(parents=True, exist_ok=True)
     mageck_ok = subprocess.run(["which", "mageck"], capture_output=True).returncode == 0
@@ -164,6 +177,9 @@ def run_mageck_jobs(jobs, dry_run=False):
         print("  ERROR: mageck not in PATH. Activate the mageck env first:")
         print("  micromamba activate .micromamba/envs/mageck")
         sys.exit(1)
+
+    # MAGeCK cannot read gzipped files; decompress once per source file
+    decompressed = {}
 
     for name, (count_file, treat, ctrl) in jobs.items():
         out = PROC_DIR / f"{name}.gene_summary.txt"
@@ -174,9 +190,17 @@ def run_mageck_jobs(jobs, dry_run=False):
             print(f"  skip (no samples detected) {name}")
             continue
 
+        # Decompress if necessary
+        if str(count_file).endswith(".gz"):
+            if str(count_file) not in decompressed:
+                decompressed[str(count_file)] = _decompress_gz(count_file)
+            count_file_for_mageck = decompressed[str(count_file)]
+        else:
+            count_file_for_mageck = count_file
+
         cmd = [
             "mageck", "test",
-            "--count-table",     str(count_file),
+            "--count-table",     str(count_file_for_mageck),
             "--treatment-id",    ",".join(treat),
             "--control-id",      ",".join(ctrl),
             "--output-prefix",   str(PROC_DIR / name),
@@ -417,16 +441,19 @@ def main():
                         help="Print MAGeCK commands without running them")
     parser.add_argument("--skip-features", action="store_true",
                         help="Skip feature matrix build")
+    parser.add_argument("--skip-mageck",   action="store_true",
+                        help="Skip MAGeCK (steps 2-3); go straight to parse+feature build")
     args = parser.parse_args()
 
-    print("\n=== Step 1: Download raw count files ===")
-    download_raw_files()
+    if not args.skip_mageck:
+        print("\n=== Step 1: Download raw count files ===")
+        download_raw_files()
 
-    print("\n=== Step 2: Detect sample groups ===")
-    jobs = get_sample_groups()
+        print("\n=== Step 2: Detect sample groups ===")
+        jobs = get_sample_groups()
 
-    print("\n=== Step 3: Run MAGeCK ===")
-    run_mageck_jobs(jobs, dry_run=args.dry_run)
+        print("\n=== Step 3: Run MAGeCK ===")
+        run_mageck_jobs(jobs, dry_run=args.dry_run)
 
     if not args.dry_run:
         print("\n=== Step 4: Parse MAGeCK outputs ===")
@@ -446,6 +473,7 @@ def main():
             ]:
                 if f.exists():
                     mouse_genes.update(pd.read_parquet(f).index.tolist())
+            mouse_genes = {g for g in mouse_genes if g is not None and isinstance(g, str)}
             if mouse_genes:
                 build_feature_matrix(sorted(mouse_genes), ortholog_df)
             else:
