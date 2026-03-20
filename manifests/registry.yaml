@@ -81,3 +81,58 @@ datasets:
         format: tsv.gz
         size_bytes: 47965907
     downloaded_at: 2026-02-08
+  - name: menuetto_scherzo_2025
+    type: real
+    version: GSE285778
+    source:
+      local_path: data/bulk/menuetto_scherzo_2025
+    target_subdir: real/menuetto_scherzo_2025/vGSE285778
+    checksum_file: checksums.sha256
+    source_url: https://ftp.ncbi.nlm.nih.gov/geo/series/GSE285nnn/GSE285778/suppl/
+    description: >
+      Jin, Deng, La Marca et al. (2025) Nat Commun. Genome-wide Cas12a CRISPR screens
+      in Eµ-MYC mouse lymphoma cells (Menuetto dual-library and Scherzo quad-library)
+      and iMDF dropout screen (4 timepoints). GEO GSE285778. Primary substrate for
+      active learning simulation (Aims 1–4) in notebooks/Cas12a_EuMyc/.
+    publication:
+      pmid: 39885149
+      doi: 10.1038/s41467-025-56282-2
+      journal: Nature Communications
+      year: 2025
+    organism: Mus musculus
+    cell_models:
+      - name: EuMyc_lymphoma_line20
+        type: transformed_lymphoma
+        screen_arms: [menuetto_enrichment, scherzo_enrichment]
+      - name: iMDF_enAsCas12aKI_KI
+        type: immortalised_fibroblast
+        screen_arms: [menuetto_dropout]
+    libraries:
+      - name: Menuetto
+        type: dual_crRNA
+        n_genes: 21743
+        guides_per_gene: 2
+      - name: Scherzo
+        type: quad_crRNA
+        n_genes: 21721
+        guides_per_gene: 4
+    files:
+      - path: raw/GSE285778_EuMycCountMenuetto.txt.gz
+        format: tsv.gz
+        size_bytes: 1048576
+      - path: raw/GSE285778_EuMycCountScherzo.txt.gz
+        format: tsv.gz
+        size_bytes: 638976
+      - path: raw/GSE285778_iMDFCount.txt.gz
+        format: tsv.gz
+        size_bytes: 1468006
+      - path: raw/GSE285778_InVivoCount.txt.gz
+        format: tsv.gz
+        size_bytes: 273408
+    downloaded_at: null
+    notes: >
+      Cross-library transfer (Menuetto <-> Scherzo) is the primary Aim 2 test.
+      Same cell line, same passage, same drug concentrations — only guide
+      architecture differs. iMDF dropout arm provides 4-timepoint temporal
+      structure for Aim 4 AL simulation. InVivoCount is reference only,
+      not used in AL simulation.
