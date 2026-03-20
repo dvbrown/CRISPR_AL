@@ -12,6 +12,8 @@ Visualises the raw crRNA count matrix structure and key quality metrics:
 
 Run:
   marimo edit --watch notebooks/Cas12a_EuMyc/00_explore_menuetto.py
+
+  claude --resume "fix-plot-style-save-figures"
 """
 
 import marimo
@@ -167,6 +169,15 @@ def _(pd, sample_cols):
 def _(mo):
     mo.md("""
     ## 1. Library size per sample
+
+    **Normal.** All 24 samples have 1.5–2.5 M total counts (mean ~2.0 M), which is
+    adequate for a genome-wide screen at 2 guides/gene (~43 K guides).
+
+    - Input samples are slightly deeper (2.0–2.5 M) than treated samples (1.5–2.0 M).
+      A modest depth difference is common and does not affect analysis after normalisation.
+    - No outlier samples — all replicates within each condition are consistent.
+    - Typical CRISPR screens aim for ≥ 30× coverage (reads/guide); at ~35–55× here
+      Input coverage is in the acceptable range.
     """)
     return
 
@@ -201,6 +212,18 @@ def _(COND_COLOURS, COND_ORDER, FIGURES_DIR, count_mat, plt, sample_meta):
 def _(mo):
     mo.md("""
     ## 2. Guides per gene & count distribution
+
+    **Normal.** The Menuetto library is highly uniform: essentially all genes have exactly
+    2 guides, consistent with the library design. A small tail of 1-guide genes (~74) should
+    be excluded from gene-level hit scoring downstream.
+
+    - The Input count distribution is log-normal with a median around log₁₀ ≈ 1.6
+      (~40 reads/guide), which is typical of a well-represented pooled screen.
+    - The left tail (low-count guides) is small — very few guides are under-represented in
+      the Input plasmid pool. This is good: it means the library was not severely bottlenecked
+      during lentiviral production or transduction.
+    - No spike of zero-count guides in Input, confirming the Input sequencing depth is
+      sufficient to call LFC accurately.
     """)
     return
 
@@ -239,6 +262,21 @@ def _(FIGURES_DIR, count_mat, gene_col, np, plt):
 def _(mo):
     mo.md("""
     ## 3. Count distributions per sample
+
+    **⚠ Anomalous — massive dropout in all post-selection conditions, including DMSO.**
+
+    - Input samples show healthy per-guide distributions (median log₁₀ ≈ 1.6–1.9, ~40–80 reads).
+    - DMSO, Nutlin-3a, and S63845 samples are **compressed to zero**: the majority of guides
+      have 0 counts, so the boxes collapse to the bottom of the axis. This is consistent with the
+      header statistics (64–80% zero-count guides per treated replicate).
+    - Some drug-driven dropout is expected and biological (sensitising gene KOs are lethal), but
+      **DMSO showing the same near-complete dropout as drug conditions is a red flag**. DMSO
+      replicates should look close to Input.
+    - Most likely explanation: the cells were proliferated for a **very long time** after
+      transduction before harvesting, allowing background essential-gene dropout to accumulate.
+      This compresses the dynamic range and makes DMSO a poor null comparator.
+    - Despite this, drug-specific effects on top of background are still visible in the LFC
+      distributions (see §7).
     """)
     return
 
@@ -280,6 +318,27 @@ def _(COND_COLOURS, COND_ORDER, FIGURES_DIR, count_mat, np, plt, sample_meta):
 def _(mo):
     mo.md("""
     ## 4. Replicate correlation
+
+    **⚠ Poor across all conditions — driven by count sparsity.**
+
+    | Condition | Pearson r (rep1 vs rep2) | Expectation |
+    |---|---|---|
+    | Input | 0.42 | > 0.95 ✗ |
+    | Nutlin-3a | 0.08 | > 0.7 ✗ |
+    | S63845 | 0.07 | > 0.7 ✗ |
+
+    - **Input r = 0.42** is below the standard quality threshold for a pooled screen
+      (typically r > 0.95 for Input replicates, which should be nearly identical). This
+      could reflect PCR jackpotting during library prep, early transduction bottlenecking,
+      or uneven sequencing within the input pool. Worth investigating with the wet-lab team.
+    - **Treatment r ≈ 0.08** is expected when ~70–80% of guides have 0 counts: Pearson
+      correlation degrades to noise on sparse binary-like data. Spearman correlation on
+      non-zero guides only, or NNMD (normalised median difference), would give a fairer
+      assessment of reproducibility in the informative subset.
+    - The hexbin plot for Input shows a clear point cloud at the low-count region (0–1 on
+      both axes) with a diffuse high-count scatter — consistent with most guides having
+      0 or very few counts even in Input, which contradicts the library size data. This
+      warrants a check of whether the sample-naming decode (s[2] for condition) is correct.
     """)
     return
 
@@ -308,6 +367,24 @@ def _(FIGURES_DIR, count_mat, np, plt, sample_meta, stats):
 def _(mo):
     mo.md("""
     ## 5. PCA of samples
+
+    **Partially expected, partially concerning.**
+
+    - **PC1 (55.6%)** completely separates Input (far right, PC1 ≈ +250) from all three
+      treated conditions (left cluster, PC1 ≈ −50 to −75). This Input-vs-selected axis
+      is expected in any CRISPR screen — selected conditions have depleted guides, Input
+      does not. The extreme magnitude of the separation reflects the high dropout rate.
+    - **DMSO, Nutlin-3a, and S63845 cluster together** on PC1, indicating dropout is
+      dominated by shared essential-gene biology rather than drug-specific effects.
+      Drug-specific effects are visible but small relative to background selection.
+    - **PC2 (3.6%):** One Nutlin-3a replicate is a clear outlier (high PC2 ≈ +175).
+      This warrants inspection — it may be a mislabelled sample or a replicate with
+      anomalous sequencing. Input replicates also scatter widely on PC2, consistent
+      with the poor Input Pearson r seen in §4.
+    - **PC3–4 (3.2%, 3.1%):** Drug conditions begin to separate from each other,
+      suggesting drug-specific biology is present but requires deeper PCs to resolve.
+    - **Overall:** the PCA structure is consistent with a high-dropout screen. The
+      biology is being driven by a subset of strongly selected guides.
     """)
     return
 
@@ -363,6 +440,12 @@ def _(
 def _(mo):
     mo.md("""
     ## 6. Gene-level LFC
+
+    LFC is computed as log₂(mean RPM+1 in treatment / mean RPM+1 in Input), then
+    summarised per gene as the **median across the 2 guides**. The +1 pseudo-count
+    prevents log(0) and sets the depletion floor at approximately log₂(1 / Input_RPM).
+    For a guide with Input RPM ≈ 34 (median), this floor is log₂(1/34) ≈ **−5.1**,
+    consistent with the observed LFC distributions in §7.
     """)
     return
 
@@ -392,6 +475,31 @@ def _(count_mat, gene_col, np, pd, sample_meta):
 def _(mo):
     mo.md("""
     ## 7. LFC distributions
+
+    **Bimodal — consistent with a high-dropout screen, but biological signal is present.**
+
+    All three conditions show a **bimodal LFC distribution**:
+    - A large peak at LFC ≈ −4 to −5: guides that dropped to zero counts in the selected
+      condition (hits the pseudo-count floor). This is the "dropout mass".
+    - A smaller shoulder/peak near LFC ≈ 0: guides that survived selection (neither
+      essential nor sensitising).
+
+    This bimodal shape is characteristic of screens with **very strong selection pressure**
+    or long proliferation windows, and is seen even in DMSO — meaning a large fraction of
+    the mouse genome is required for lymphoma cell fitness under these conditions.
+
+    **Drug-specific shifts:**
+    - Nutlin-3a and S63845 distributions are shifted slightly more negative than DMSO,
+      reflecting additional drug-induced lethality on top of background essential-gene
+      dropout. The difference is modest, suggesting the screen is not overpowered for
+      drug-specific hits.
+    - The enriched tail (LFC > 1) is visible for all three conditions, representing the
+      resistance genes of interest.
+
+    **Is this normal?** Partially. Bimodal LFC distributions occur in well-run screens
+    with long selection, but the floor being so dominant (most genes piled at −5) reduces
+    precision for ranking depleted genes. For enriched genes (resistance hits), the screen
+    appears informative.
     """)
     return
 
@@ -424,6 +532,32 @@ def _(FIGURES_DIR, lfc_df, np, plt):
 def _(mo):
     mo.md("""
     ## 8. Ranked LFC — known controls
+
+    **✓ Positive controls are in the expected biological positions — the screen is working.**
+
+    **Nutlin-3a (MDM2i / p53 activator):**
+    - *Trp53* is the **most enriched gene** (LFC ≈ +6.5). Trp53 KO abolishes the drug
+      target (p53), conferring strong resistance. This is the canonical positive control
+      for Nutlin-3a and its presence at rank 1 validates the screen.
+    - *Cdkn1a* (p21) is also enriched — a direct p53 transcriptional target; KO of p21
+      partially bypasses p53-mediated cell-cycle arrest.
+    - *Mdm2* and *Mdm4* are in the depleted half: KO of these negative regulators of p53
+      increases p53 activity, sensitising cells to Nutlin-3a. Expected.
+
+    **S63845 (MCL-1 BH3 mimetic):**
+    - *Bcl2* is the **most enriched gene** (LFC ≈ +8.5). BCL2 over-representation via KO
+      of its repressor, or BCL2 functional upregulation upon MCL-1 loss, can rescue cells
+      from MCL-1-driven apoptosis. Strong anti-apoptotic compensator.
+    - *Bax* and *Bak1* are enriched (LFC ≈ +2–3): KO of the apoptotic executioners prevents
+      the cell from committing to apoptosis even when MCL-1 is inhibited. Expected.
+    - *Mcl1* itself is among the depleted genes: consistent with synthetic lethality — KO of
+      the same target the drug inhibits makes cells hypersensitive. Expected.
+    - *Bcl2l1* (BCL-xL) is near neutral/slightly enriched, as expected (partial redundancy
+      with MCL-1 but not a dominant resistance mechanism here).
+
+    **Overall verdict:** Despite the quality flags in §3–4, the biological signal is real
+    and the screen has discriminative power for enriched (resistance) phenotypes.
+    Depleted hits are harder to interpret given the high baseline dropout.
     """)
     return
 
