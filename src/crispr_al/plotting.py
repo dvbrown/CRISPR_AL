@@ -30,7 +30,7 @@ PUBLICATION_COLORS = [
 ]
 
 
-def theme_publication(base_size: int = 11, base_family: str = "sans-serif"):
+def theme_publication(base_size: int = 12, base_family: str = "sans-serif"):
     """Return a minimal publication-ready plotnine theme.
 
     Parameters
@@ -48,7 +48,7 @@ def theme_publication(base_size: int = 11, base_family: str = "sans-serif"):
         panel_grid_minor=element_blank(),
         axis_ticks=element_line(colour="#444444", size=0.5),
         axis_text=element_text(size=base_size - 1, family=base_family, colour="#222222"),
-        axis_title=element_text(size=base_size, family=base_family, colour="#222222"),
+        axis_title=element_text(size=base_size, family=base_family, colour="#222222", face="bold"),
         strip_background=element_rect(fill="#F0F0F0", colour="#444444", size=0.6),
         strip_text=element_text(size=base_size - 1, family=base_family, colour="#222222"),
         legend_background=element_blank(),

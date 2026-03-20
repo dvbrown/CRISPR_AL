@@ -13,6 +13,7 @@ Visualises the raw crRNA count matrix structure and key quality metrics:
 Run:
   marimo edit --watch notebooks/Cas12a_EuMyc/00_explore_menuetto.py
 """
+
 import marimo
 
 __generated_with = "0.20.2"
@@ -22,6 +23,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -30,17 +32,60 @@ def _(mo):
     mo.md(r"""
     # GSE285778 — Menuetto Count Data: Exploratory Analysis
 
-    **Library:** Menuetto (dual crRNA, ~21,743 genes, 2 crRNA/gene)
-    **Cell line:** Eµ-MYC lymphoma line #20
-    **Conditions:** Input (×6), DMSO (×6), Nutlin-3a (×6), S63845 (×6)
+    - **Library:** Menuetto (dual crRNA, 2 crRNA/gene, 1 vector per crRNA)
+    - **Cell line:** Eµ-MYC;Cas12het lymphoma cells
+    - **Organism:** *Mus musculus*
+    - **Source:** WEHI Blood Cells and Blood Cancer division (La Marca, Diepstraten et al.)
 
-    Sample naming: `D{rep}{cond}` — D=Dual, rep=1–6,
-    i=Input · d=DMSO · n=Nutlin-3a · s=S63845
+    ---
+
+    ## Library composition
+
+    | | |
+    |---|---|
+    | Total guides | 43,814 |
+    | Targeting genes | 21,694 |
+    | Guides per gene | 2 (mode); 74 genes have only 1 guide |
+    | Non-targeting controls | 500 (gene label `NTC`) |
+    | Guides absent from all samples | 21 (0.05%) |
+
+    ---
+
+    ## Sample layout — 24 samples, 4 conditions × 6 replicates
+
+    Sample names follow the scheme `D{rep}{cond}`:
+    **D** = Dual (Menuetto), **rep** = 1–6, **cond** = `i` Input · `d` DMSO · `n` Nutlin-3a · `s` S63845
+
+    | Condition | Samples | Mean total reads | Mean guide coverage | Mean zero-count guides |
+    |---|---|---|---|---|
+    | Input | D1i–D6i | 2.39 M | **54×** | 386 (0.9%) |
+    | DMSO | D1d–D6d | 1.72 M | 39× | 30,130 (68.8%) |
+    | Nutlin-3a | D1n–D6n | 1.91 M | 43× | 28,041 (64.0%) |
+    | S63845 | D1s–D6s | 1.92 M | 44× | 35,245 (80.4%) |
+
+    ---
+
+    ## Key QC observations
+
+    - **Input coverage is good:** 54× mean reads/guide; only 0.9% of guides have zero counts in any given Input replicate.
+    - **High zero rates in treated samples are expected and biological:** guides targeting essential or drug-sensitising genes drop out under selection. S63845 shows the most dropout (80%), consistent with a strong MCL-1-dependent apoptotic signal.
+    - **DMSO zero rate (69%) is surprisingly high** relative to Input — worth checking whether this reflects genuine essential-gene dropout over the culture period or a sequencing depth issue. DMSO has the lowest mean coverage (39×).
+    - **74 genes have only 1 guide** — these should be flagged and excluded from gene-level scoring, as MAGeCK requires ≥2 guides for reliable RRA.
+    - **NTC set is large (500 guides)** — well-powered for null distribution estimation and FDR calibration.
+
+    ---
+
+    ## Condition biology
+
+    | Condition | Mechanism | Expected top hits |
+    |---|---|---|
+    | Nutlin-3a | MDM2 inhibitor → p53 stabilisation → apoptosis | *Trp53*, MDM2 pathway KOs confer **resistance** (positive LFC) |
+    | S63845 | MCL-1 BH3 mimetic → BAX/BAK-dependent apoptosis | *Bax*, *Bak1* KOs confer **resistance**; *Mcl1* KO sensitises |
+    | DMSO | No drug selection | Core essential genes drop out (ribosome, proteasome, translation) |
+    | Input | Library reference (T=0) | — |
     """)
     return
 
-
-# ── Imports + paths ───────────────────────────────────────────────────────────
 
 @app.cell
 def _():
@@ -52,12 +97,37 @@ def _():
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
 
+    plt.rcParams.update({
+        "figure.facecolor":    "white",
+        "axes.facecolor":      "white",
+        "axes.edgecolor":      "#444444",
+        "axes.linewidth":      0.8,
+        "axes.grid":           True,
+        "grid.color":          "#DDDDDD",
+        "grid.linewidth":      0.4,
+        "grid.linestyle":      "-",
+        "xtick.color":         "#444444",
+        "ytick.color":         "#444444",
+        "xtick.major.width":   0.5,
+        "ytick.major.width":   0.5,
+        "text.color":          "#222222",
+        "axes.labelcolor":     "#222222",
+        "axes.labelweight":    "bold",
+        "axes.titlesize":      12,
+        "axes.labelsize":      11,
+        "xtick.labelsize":     10,
+        "ytick.labelsize":     10,
+        "font.family":         "sans-serif",
+        "savefig.facecolor":   "white",
+        "savefig.dpi":         300,
+    })
+
     RAW_FILE = Path.cwd() / "data/bulk/menuetto_scherzo_2025/raw/GSE285778_EuMycCountMenuetto.txt.gz"
 
-    return Path, PCA, RAW_FILE, StandardScaler, np, pd, plt, stats
+    FIGURES_DIR = Path.cwd() / "notebooks/Cas12a_EuMyc/figures/explore_menuetto"
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    return FIGURES_DIR, PCA, RAW_FILE, StandardScaler, np, pd, plt, stats
 
-
-# ── Load count matrix ─────────────────────────────────────────────────────────
 
 @app.cell
 def _(RAW_FILE, pd):
@@ -70,11 +140,8 @@ def _(RAW_FILE, pd):
     print(f"Samples:      {sample_cols}")
     print(f"Unique genes: {gene_col.nunique()}")
     print(f"Guides/gene:  {count_mat.shape[0] / gene_col.nunique():.2f} mean")
-
     return count_mat, gene_col, sample_cols
 
-
-# ── Decode sample metadata ────────────────────────────────────────────────────
 
 @app.cell
 def _(pd, sample_cols):
@@ -96,10 +163,16 @@ def _(pd, sample_cols):
     return COND_COLOURS, COND_ORDER, sample_meta
 
 
-# ── 1. Library size per sample ────────────────────────────────────────────────
+@app.cell
+def _(mo):
+    mo.md("""
+    ## 1. Library size per sample
+    """)
+    return
+
 
 @app.cell
-def _(COND_COLOURS, COND_ORDER, count_mat, plt, sample_meta):
+def _(COND_COLOURS, COND_ORDER, FIGURES_DIR, count_mat, plt, sample_meta):
     from matplotlib.patches import Patch as _Patch
 
     _lib_sizes = count_mat.sum(axis=0) / 1e6
@@ -119,13 +192,21 @@ def _(COND_COLOURS, COND_ORDER, count_mat, plt, sample_meta):
         loc="upper right", fontsize=8,
     )
     plt.tight_layout()
+    _fig.savefig(FIGURES_DIR / "01_library_size.png", dpi=300, bbox_inches="tight")
     _fig
+    return
 
-
-# ── 2. Guides-per-gene + count distribution ───────────────────────────────────
 
 @app.cell
-def _(count_mat, gene_col, np, plt):
+def _(mo):
+    mo.md("""
+    ## 2. Guides per gene & count distribution
+    """)
+    return
+
+
+@app.cell
+def _(FIGURES_DIR, count_mat, gene_col, np, plt):
     _guides_per_gene = gene_col.value_counts()
     _input_cols = [c for c in count_mat.columns if c.endswith("i")]
     _mean_input = count_mat[_input_cols].mean(axis=1)
@@ -149,13 +230,21 @@ def _(count_mat, gene_col, np, plt):
     _a2.legend(fontsize=9)
 
     plt.tight_layout()
+    _fig.savefig(FIGURES_DIR / "02_guides_per_gene_count_dist.png", dpi=300, bbox_inches="tight")
     _fig
+    return
 
-
-# ── 3. Count distributions per sample (box plot, log scale) ──────────────────
 
 @app.cell
-def _(COND_COLOURS, COND_ORDER, count_mat, np, plt, sample_meta):
+def _(mo):
+    mo.md("""
+    ## 3. Count distributions per sample
+    """)
+    return
+
+
+@app.cell
+def _(COND_COLOURS, COND_ORDER, FIGURES_DIR, count_mat, np, plt, sample_meta):
     _ordered = []
     for _cond in COND_ORDER:
         _ordered += sample_meta[sample_meta["condition"] == _cond].index.tolist()
@@ -182,13 +271,21 @@ def _(COND_COLOURS, COND_ORDER, count_mat, np, plt, sample_meta):
         _n += _nc
 
     plt.tight_layout()
+    _fig.savefig(FIGURES_DIR / "03_count_distributions.png", dpi=300, bbox_inches="tight")
     _fig
+    return
 
-
-# ── 4. Replicate correlation ──────────────────────────────────────────────────
 
 @app.cell
-def _(count_mat, np, plt, sample_meta, stats):
+def _(mo):
+    mo.md("""
+    ## 4. Replicate correlation
+    """)
+    return
+
+
+@app.cell
+def _(FIGURES_DIR, count_mat, np, plt, sample_meta, stats):
     _fig, _axes = plt.subplots(1, 3, figsize=(12, 4))
 
     for _ax, _cond in zip(_axes, ["Input", "Nutlin-3a", "S63845"]):
@@ -202,13 +299,31 @@ def _(count_mat, np, plt, sample_meta, stats):
         _ax.set_title(f"{_cond}: rep1 vs rep2\nPearson r = {_r:.4f}")
 
     plt.tight_layout()
+    _fig.savefig(FIGURES_DIR / "04_replicate_correlation.png", dpi=300, bbox_inches="tight")
     _fig
+    return
 
-
-# ── 5. PCA of samples ─────────────────────────────────────────────────────────
 
 @app.cell
-def _(COND_COLOURS, COND_ORDER, PCA, StandardScaler, count_mat, np, plt, sample_meta):
+def _(mo):
+    mo.md("""
+    ## 5. PCA of samples
+    """)
+    return
+
+
+@app.cell
+def _(
+    COND_COLOURS,
+    COND_ORDER,
+    FIGURES_DIR,
+    PCA,
+    StandardScaler,
+    count_mat,
+    np,
+    plt,
+    sample_meta,
+):
     _cpm = count_mat.div(count_mat.sum(axis=0) / 1e6, axis=1)
     _log_cpm = np.log2(_cpm + 1)
     _X = StandardScaler().fit_transform(_log_cpm.T)
@@ -239,10 +354,18 @@ def _(COND_COLOURS, COND_ORDER, PCA, StandardScaler, count_mat, np, plt, sample_
 
     _pa.set_title("PCA of samples (log-CPM, guide level)")
     plt.tight_layout()
+    _fig.savefig(FIGURES_DIR / "05_pca_samples.png", dpi=300, bbox_inches="tight")
     _fig
+    return
 
 
-# ── 6. Compute gene-level LFC ─────────────────────────────────────────────────
+@app.cell
+def _(mo):
+    mo.md("""
+    ## 6. Gene-level LFC
+    """)
+    return
+
 
 @app.cell
 def _(count_mat, gene_col, np, pd, sample_meta):
@@ -265,10 +388,16 @@ def _(count_mat, gene_col, np, pd, sample_meta):
     return (lfc_df,)
 
 
-# ── 7. LFC distributions ──────────────────────────────────────────────────────
+@app.cell
+def _(mo):
+    mo.md("""
+    ## 7. LFC distributions
+    """)
+    return
+
 
 @app.cell
-def _(lfc_df, np, plt):
+def _(FIGURES_DIR, lfc_df, np, plt):
     _COLS = {
         "lfc_nutlin": ("#d01c8b", "Nutlin-3a vs Input"),
         "lfc_s63845": ("#0571b0", "S63845 vs Input"),
@@ -286,13 +415,21 @@ def _(lfc_df, np, plt):
     _ax.set_title("LFC distributions — Menuetto Eµ-MYC")
     _ax.legend(fontsize=9)
     plt.tight_layout()
+    _fig.savefig(FIGURES_DIR / "07_lfc_distributions.png", dpi=300, bbox_inches="tight")
     _fig
+    return
 
-
-# ── 8. Ranked LFC with known controls ────────────────────────────────────────
 
 @app.cell
-def _(lfc_df, plt):
+def _(mo):
+    mo.md("""
+    ## 8. Ranked LFC — known controls
+    """)
+    return
+
+
+@app.cell
+def _(FIGURES_DIR, lfc_df, plt):
     # Nutlin-3a (MDM2 inhibitor / p53 activator):
     #   Trp53 KO → resistance (loss of p53 target) → enriched (positive LFC)
     #   Mdm2 KO  → more p53 activity → sensitised → depleted
@@ -333,10 +470,18 @@ def _(lfc_df, plt):
         _ax_r.axhline(0, color="black", linewidth=0.5, linestyle="--")
 
     plt.tight_layout()
+    _fig.savefig(FIGURES_DIR / "08_ranked_lfc.png", dpi=300, bbox_inches="tight")
     _fig
+    return
 
 
-# ── 9. Top hits table ─────────────────────────────────────────────────────────
+@app.cell
+def _(mo):
+    mo.md("""
+    ## 9. Top hits
+    """)
+    return
+
 
 @app.cell
 def _(lfc_df, mo, pd):
@@ -349,15 +494,22 @@ def _(lfc_df, mo, pd):
         _enr["direction"] = "enriched"
         return pd.concat([_enr, _dep]).reset_index(drop=True)
 
-    return mo.vstack([
-        mo.md("### Top 15 depleted / enriched — Nutlin-3a"),
+    mo.vstack([
+        mo.md("### Nutlin-3a vs Input"),
         mo.plain_text(_top(lfc_df["lfc_nutlin"]).to_string(index=False)),
-        mo.md("### Top 15 depleted / enriched — S63845"),
+        mo.md("### S63845 vs Input"),
         mo.plain_text(_top(lfc_df["lfc_s63845"]).to_string(index=False)),
     ])
+    return
 
 
-# ── 10. Summary stats ─────────────────────────────────────────────────────────
+@app.cell
+def _(mo):
+    mo.md("""
+    ## 10. Summary statistics
+    """)
+    return
+
 
 @app.cell
 def _(count_mat, gene_col, lfc_df, mo, pd):
@@ -390,9 +542,9 @@ def _(count_mat, gene_col, lfc_df, mo, pd):
     })
 
     mo.vstack([
-        mo.md("## Summary"),
         mo.plain_text(_summary.to_string(index=False)),
     ])
+    return
 
 
 if __name__ == "__main__":

@@ -108,6 +108,11 @@ cd notebooks/crispr_screen_transfer/nextflow/pipeline_b && nextflow run main.nf 
 - Record decisions in `docs/decision-log/`.
 - Keep external credentials out of the repo.
 
+## Visualisation Conventions
+- **plotnine plots:** apply `theme_publication()` from `src/crispr_al/plotting.py` to every figure.
+- **matplotlib plots:** apply the matching rcParams at notebook startup (see `notebooks/Cas12a_EuMyc/00_explore_menuetto.py` for the canonical block), including `"axes.labelweight": "bold"`.
+- **Save all figures** as 300 dpi PNG to `notebooks/<notebook_folder>/figures/<notebook_name>/`, using `fig.savefig(..., dpi=300, bbox_inches="tight")` (matplotlib) or `fig.save(...)` (plotnine).
+
 ## Open Targets MCP
 - Remote endpoint: `https://mcp.platform.opentargets.org/mcp`
 - Docs MCP: `https://platform-docs.opentargets.org/~gitbook/mcp`

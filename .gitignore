@@ -22,4 +22,7 @@ notebooks/crispr_screen_transfer/artifacts/
 # Generated pipeline results (CSVs, PNGs, reports)
 notebooks/crispr_screen_transfer/results/
 
+# Results
 *.gz
+notebooks/Cas12a_EuMyc/results/*
+*.png
