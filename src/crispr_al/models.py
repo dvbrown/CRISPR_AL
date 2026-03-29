@@ -32,11 +32,13 @@ def train_rf(
     y_train: np.ndarray,
     seed: int,
     n_estimators: int = 200,
+    min_samples_leaf: int = 1,
 ) -> RandomForestRegressor:
     """Train RandomForestRegressor."""
     model = RandomForestRegressor(
         n_estimators=n_estimators,
         max_features="sqrt",
+        min_samples_leaf=min_samples_leaf,
         random_state=seed,
         n_jobs=-1,
     )

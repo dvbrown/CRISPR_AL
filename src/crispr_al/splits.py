@@ -1,4 +1,4 @@
-"""Split generation for Design A (within-screen) and Design B (cross-screen)."""
+"""Split generation for Design A (within-screen), Design B (cross-screen), and Olivieri LODO."""
 import hashlib
 import json
 
@@ -141,6 +141,34 @@ def compute_overlap_baseline_hash(
         "seed": 0,
         "shared_genes": sorted(shared_genes),
     })
+
+
+# ── Olivieri 2020 LODO splits ─────────────────────────────────────────────────
+
+def generate_lodo_splits(
+    normz_matrix,
+    screen_metadata,
+    library: str,
+) -> list:
+    """Generate leave-one-drug-out split configurations within a library.
+
+    Parameters
+    ----------
+    normz_matrix    : DataFrame, genes × screens (index=gene_symbol, columns=screen_label)
+    screen_metadata : DataFrame with columns screen_label and library
+    library         : 'TKOv2' or 'TKOv3'
+
+    Returns list of dicts with keys: test_screen, train_screens.
+    Only includes screens present in both metadata and normz_matrix columns.
+    """
+    lib_screens = screen_metadata.loc[
+        screen_metadata["library"] == library, "screen_label"
+    ].tolist()
+    lib_screens = [s for s in lib_screens if s in normz_matrix.columns]
+    return [
+        {"test_screen": s, "train_screens": [t for t in lib_screens if t != s]}
+        for s in lib_screens
+    ]
 
 
 # ── Aim 1 EuMyc split functions ───────────────────────────────────────────────

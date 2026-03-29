@@ -78,6 +78,15 @@ def load_sharon_screen_scores(path: str) -> pd.DataFrame:
     )
 
 
+def load_olivieri_normz(path: str) -> pd.DataFrame:
+    """Load the Olivieri 2020 NormZ matrix (genes × screens).
+
+    Returns wide DataFrame with gene symbols as index and screen labels as columns.
+    Scores are DrugZ NormZ (Z-score; negative = sensitising KO).
+    """
+    return pd.read_parquet(path)
+
+
 def zscore_normalize(df: pd.DataFrame, score_col: str = "cs") -> pd.DataFrame:
     """Fit z-score on ALL genes and add score_norm column.
 

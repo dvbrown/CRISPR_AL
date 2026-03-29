@@ -197,6 +197,32 @@ def build_pathway_features(
     return result
 
 
+def build_olivieri_features(
+    gene_entrez_df: pd.DataFrame,
+    reactome_path: str,
+    goa_path: str,
+    hallmarks_path: str,
+    kegg_path: str,
+) -> pd.DataFrame:
+    """Build 6 pathway features for the Olivieri 2020 gene universe.
+
+    gene_entrez_df must have columns: gene_symbol, entrez_id.
+    Delegates to build_pathway_features(); skips expression and co-essentiality
+    features because RPE1-hTERT is not in DepMap/CCLE.
+
+    Returns DataFrame indexed by gene_symbol with columns:
+      n_reactome_pathways, n_go_bp_terms, n_go_mf_terms,
+      in_hallmark_apoptosis, in_hallmark_oxidative_phosphorylation, n_kegg_pathways
+    """
+    return build_pathway_features(
+        reactome_path=reactome_path,
+        goa_path=goa_path,
+        hallmarks_path=hallmarks_path,
+        kegg_path=kegg_path,
+        screen_df=gene_entrez_df,
+    )
+
+
 def assemble_gene_features(
     screen_genes: list,
     expr_series: pd.Series,
