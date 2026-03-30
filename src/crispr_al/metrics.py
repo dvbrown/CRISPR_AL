@@ -193,6 +193,72 @@ def bootstrap_ci_bca(
     )
 
 
+# ---------------------------------------------------------------------------
+# Aim 2 agreement metrics (Elling 2024 / CRISPR-StAR)
+# ---------------------------------------------------------------------------
+
+def compute_cat(
+    y_vitro: np.ndarray,
+    y_vivo: np.ndarray,
+    n: int,
+    direction: str = "sensitiser",
+) -> float:
+    """Concordance-at-the-top (CAT) at rank N.
+
+    direction='sensitiser': compare bottom-N (most negative) genes.
+    direction='resistor':   compare top-N (most positive) genes.
+    Returns fraction of N genes shared between the two ranked lists.
+    """
+    if direction == "sensitiser":
+        top_vitro = set(np.argsort(y_vitro)[:n])
+        top_vivo = set(np.argsort(y_vivo)[:n])
+    else:
+        top_vitro = set(np.argsort(y_vitro)[-n:])
+        top_vivo = set(np.argsort(y_vivo)[-n:])
+    return len(top_vitro & top_vivo) / n if n > 0 else 0.0
+
+
+def compute_jaccard(a, b) -> float:
+    """Jaccard index between two sets (or iterables)."""
+    a, b = set(a), set(b)
+    union = a | b
+    return len(a & b) / len(union) if union else 0.0
+
+
+def compute_discordance_labels(
+    wide: pd.DataFrame,
+    y_vitro_col: str = "in_vitro",
+    y_vivo_col: str = "in_vivo",
+    sd_cutoff: float = 1.0,
+) -> pd.DataFrame:
+    """Label each gene as concordant, in_vivo_specific, or in_vitro_specific.
+
+    wide must have columns y_vitro_col and y_vivo_col (z-scored).
+
+    A gene is discordant when:
+      - |delta| > sd_cutoff  AND
+      - sign(in_vitro) != sign(in_vivo)
+
+    Discordant genes are further labelled:
+      - in_vivo_specific:  |in_vivo| > |in_vitro|
+      - in_vitro_specific: |in_vitro| >= |in_vivo|
+
+    Returns copy of wide with added columns: delta, concordance_label.
+    """
+    df = wide[[y_vitro_col, y_vivo_col]].copy()
+    df["delta"] = df[y_vivo_col] - df[y_vitro_col]
+    discordant = (df["delta"].abs() > sd_cutoff) & (
+        np.sign(df[y_vitro_col]) != np.sign(df[y_vivo_col])
+    )
+    label = pd.Series("concordant", index=df.index)
+    vivo_dom = discordant & (df[y_vivo_col].abs() > df[y_vitro_col].abs())
+    vitro_dom = discordant & ~vivo_dom
+    label[vivo_dom] = "in_vivo_specific"
+    label[vitro_dom] = "in_vitro_specific"
+    df["concordance_label"] = label
+    return df
+
+
 def validate_metrics_record(record: dict, schema_path: str) -> None:
     """Validate a metrics record against the JSON schema."""
     import jsonschema

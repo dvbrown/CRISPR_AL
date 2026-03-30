@@ -197,6 +197,33 @@ def build_pathway_features(
     return result
 
 
+def map_mouse_to_human_orthologues(
+    mouse_genes: list,
+    ortho_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Map mouse gene symbols to human orthologue symbols.
+
+    ortho_df must have columns: human_symbol, mouse_symbol (one-to-one orthologues).
+
+    Returns DataFrame with columns: mouse_symbol, human_symbol. Genes without
+    a one-to-one orthologue are excluded. Logs coverage statistics.
+    """
+    import logging
+    log = logging.getLogger(__name__)
+
+    mouse_series = pd.Series(mouse_genes, name="mouse_symbol").drop_duplicates()
+    mapped = mouse_series.to_frame().merge(
+        ortho_df[["mouse_symbol", "human_symbol"]].drop_duplicates(subset=["mouse_symbol"]),
+        on="mouse_symbol",
+        how="left",
+    )
+    n_total = len(mapped)
+    n_mapped = mapped["human_symbol"].notna().sum()
+    coverage = n_mapped / n_total if n_total > 0 else 0.0
+    log.info("Orthologue mapping: %d/%d genes mapped (%.1f%%)", n_mapped, n_total, 100 * coverage)
+    return mapped.dropna(subset=["human_symbol"]).reset_index(drop=True)
+
+
 def build_olivieri_features(
     gene_entrez_df: pd.DataFrame,
     reactome_path: str,

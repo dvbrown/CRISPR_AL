@@ -49,11 +49,13 @@
 
 ## Results
 
-| Aim | Setting | RF AUROC | Ridge AUROC | Pearson (RF) |
-|---|---|---|---|---|
-| Aim 1 | Within-screen (25 repeats × 30 screens) | ≈ 0.58 | ≈ 0.64–0.67 | ≈ 0.02–0.03 |
-| Aim 2 | Cross-library (Cisplatin, Camptothecin) | ≈ 0.82 | ≈ 0.68 | — |
-| Aim 3 | LODO (TKOv2 + TKOv3) | ≈ 0.82 | ≈ 0.68 | TKOv2 ≈ 0.34, TKOv3 ≈ 0.26 |
+Mean metrics across all repeats/screens (from parquet files).
+
+| Aim | Setting | RF AUROC | Ridge AUROC | RF Pearson | Ridge Pearson | RF P@50 | RF P@100 |
+|---|---|---|---|---|---|---|---|
+| Aim 1 | Within-screen (25 repeats × 30 screens) | 0.554 | 0.595 (median 0.635) | 0.039 | 0.028 | 0.013 | 0.012 |
+| Aim 2 | Cross-library (Cisplatin, Camptothecin) | 0.821 | 0.682 | 0.143 | 0.023 | 0.370 | 0.273 |
+| Aim 3 | LODO (TKOv2 + TKOv3) | 0.813 | 0.665 | 0.261 | 0.021 | 0.313 | 0.230 |
 
 ## Key Findings
 

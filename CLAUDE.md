@@ -34,24 +34,25 @@ pytest tests/test_splits.py::test_no_leakage
 Launch a Marimo notebook for interactive editing:
 ```bash
 micromamba activate .micromamba/envs/crispr-al
-marimo edit --watch notebooks/crispr_screen_transfer/design_a_analysis.py
+marimo edit --watch notebooks/crispr_screen_transfer_hold/design_a_analysis.py
 ```
 
 ## Code Architecture
 
-Core logic lives in `src/crispr_al/` as six modules:
+Core logic lives in `src/crispr_al/` as seven modules:
 
 | Module | Role |
 |--------|------|
-| `screen.py` | Load and normalise Chen 2019 / Sharon 2019 venetoclax screens; z-score normalisation; hit-label assignment |
-| `splits.py` | Generate reproducible gene-holdout splits (Design A seeds 11001–; Design B seeds 21001– / 22001–); SHA-256 split hashing |
-| `features.py` | Build 9-feature gene matrix: MOLM-13 expression, DepMap co-essentiality, and five pathway-membership columns |
+| `screen.py` | Load and normalise CRISPR screens (Chen 2019, Sharon 2019, Olivieri 2020, Elling 2024); z-score normalisation; hit-label assignment |
+| `splits.py` | Generate reproducible gene-holdout splits (Design A seeds 11001–; Design B seeds 21001– / 22001–; Olivieri LODO; EuMyc stratified/seeded splits); SHA-256 split hashing |
+| `features.py` | Build 9-feature gene matrix: MOLM-13 expression, DepMap co-essentiality, and pathway-membership columns; Olivieri 6-feature variant; mouse-to-human ortholog mapping |
 | `models.py` | Train Ridge (RidgeCV) and Random Forest regressors; StandardScaler fit on train only |
 | `metrics.py` | Compute regression, ranking (Precision/Recall@K), and classification (AUROC/AUPRC) metrics; BCa bootstrap CIs; JSON schema validation |
 | `io.py` | Parquet, JSON, and split-manifest I/O; `get_code_commit()` for reproducibility tagging |
+| `plotting.py` | Publication-quality plotnine theme (`theme_publication()`), colour palette, and discrete scales |
 
-Metric outputs must conform to `notebooks/crispr_screen_transfer/metrics.schema.json`.
-Split configuration is declared in `notebooks/crispr_screen_transfer/splits.yaml`.
+Metric outputs must conform to `notebooks/crispr_screen_transfer_hold/metrics.schema.json`.
+Split configuration is declared in `notebooks/crispr_screen_transfer_hold/splits.yaml`.
 
 ## Experimental Designs
 
@@ -60,23 +61,23 @@ Two benchmark designs drive all active development:
 **Design A — within-screen holdout** (`splits.SEED_START = 11001`)
 - Train on 2,000 Chen 2019 genes; predict remaining ~17,000 held-out genes from the same screen.
 - 25 repeats → 50 metric JSON files (25 × 2 models).
-- Nextflow pipeline: `notebooks/crispr_screen_transfer/nextflow/pipeline_a/`
-- Results: `notebooks/crispr_screen_transfer/results/design_a/`
+- Nextflow pipeline: `notebooks/crispr_screen_transfer_hold/nextflow/pipeline_a/`
+- Results: `notebooks/crispr_screen_transfer_hold/results/design_a/`
 
 **Design B — cross-screen transfer** (`splits.XFER_SEED_START = 21001` / `XFER_SEED_START_REVERSE = 22001`)
 - Train on 2,000 genes from one screen; predict all genes in the other screen.
 - Chen → Sharon: 30 repeats; Sharon → Chen: 30 repeats; plus 2 overlap-only baselines.
 - 122 total output files (60 splits × 2 models + 2 baselines + 6 aggregated CSVs).
 - Sharon-only genes not in the feature matrix are zero-imputed (not a leakage issue).
-- Nextflow pipeline: `notebooks/crispr_screen_transfer/nextflow/pipeline_b/`
-- Results: `notebooks/crispr_screen_transfer/results/design_b/`
+- Nextflow pipeline: `notebooks/crispr_screen_transfer_hold/nextflow/pipeline_b/`
+- Results: `notebooks/crispr_screen_transfer_hold/results/design_b/`
 
 ## Nextflow Pipeline Structure
 
 Each design has its own self-contained pipeline directory:
 
 ```
-notebooks/crispr_screen_transfer/nextflow/
+notebooks/crispr_screen_transfer_hold/nextflow/
 ├── pipeline_a/          # Design A pipeline (within-screen holdout)
 │   ├── main.nf
 │   ├── nextflow.config  # results_dir → results/design_a/
@@ -91,8 +92,8 @@ notebooks/crispr_screen_transfer/nextflow/
 
 Run pipelines from their respective subdirectory:
 ```bash
-cd notebooks/crispr_screen_transfer/nextflow/pipeline_a && nextflow run main.nf -profile slurm
-cd notebooks/crispr_screen_transfer/nextflow/pipeline_b && nextflow run main.nf -profile slurm
+cd notebooks/crispr_screen_transfer_hold/nextflow/pipeline_a && nextflow run main.nf -profile slurm
+cd notebooks/crispr_screen_transfer_hold/nextflow/pipeline_b && nextflow run main.nf -profile slurm
 ```
 
 ## Default Behaviors
@@ -118,6 +119,6 @@ cd notebooks/crispr_screen_transfer/nextflow/pipeline_b && nextflow run main.nf 
 - Docs MCP: `https://platform-docs.opentargets.org/~gitbook/mcp`
 
 ## Evaluation Flow
-1. Add a repo to `docs/repo_list.md` if missing.
+1. Add a repo to `docs/repo_list/repo_list.md` if missing.
 2. Create an eval note in `docs/evals/` using `docs/evals/template.md`.
 3. Update `docs/evals/summary.md` with comparison details.

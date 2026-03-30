@@ -4,7 +4,7 @@
 
 | Dataset | Task | Models | Best AUROC | Notes |
 |---|---|---|---|---|
-| [Olivieri 2020](olivieri2020.md) | Genotoxic screen transfer (RPE1-hTERT, 30 screens, 27 agents) | Ridge, RF | RF ≈ 0.82 (cross-library + LODO); ≈ 0.58 within-screen | Pathway-only features (no DepMap/CCLE); RF jumps to 0.82 with paired screen; Ridge plateaus at ≈ 0.64–0.68 across all aims |
+| [Olivieri 2020](olivieri2020.md) | Genotoxic screen transfer (RPE1-hTERT, 30 screens, 27 agents) | Ridge, RF | RF 0.82 (Aims 2–3), 0.55 (Aim 1); Ridge 0.60–0.68 across all aims | Pathway-only features (no DepMap/CCLE); RF P@50=0.37 cross-library, 0.31 LODO; Ridge near-chance at P@50 (≈0.03) |
 
 ## External Repo Evals
 

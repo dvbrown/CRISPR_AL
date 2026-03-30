@@ -181,6 +181,67 @@ for context-specific feature selection.
 
 ---
 
+### menuetto_scherzo_2025/
+
+| Field | Value |
+|-------|-------|
+| Source | Internal (Menuetto/Scherzo experimental datasets) |
+| Cell line | EuMyc mouse B-cell lymphoma model |
+| Library | Cas12a sgRNA library (genotoxic screen panel) |
+| Method | Cas12a CRISPR screen |
+| Format | Processed parquet/CSV files in `processed/` subdirectory |
+
+**Files:**
+- `processed/` — Gene-level and sgRNA-level summary files
+
+**Use in modelling:**
+Primary data source for the `notebooks/Cas12a_EuMyc/` workstream. Used
+to benchmark within-screen holdout prediction (Aim 1) and to develop
+stratified/seeded split strategies (`splits.py` EuMyc functions). Mouse
+gene symbols are mapped to human orthologues via
+`features.map_mouse_to_human_orthologues()` before feature assembly.
+
+---
+
+### olivieri2020/
+
+| Field | Value |
+|-------|-------|
+| Source | Olivieri et al. 2020 (GEO / publication supplementary) |
+| Publication | Olivieri M et al. 2020, *Molecular Cell*, PubMed 33147444 |
+| Cell line | RPE1-hTERT (non-transformed human retinal pigment epithelium) |
+| Library | TKOv2 / TKOv3 (genome-wide, ~18,000 genes) |
+| Method | Cas12a CRISPR screen |
+| Drug | Multiple genotoxic agents and DNA damage response inhibitors |
+| Format | NormZ matrix (parquet) |
+
+**Use in modelling:**
+Benchmark dataset for the `notebooks/RPE1-hTERT_genotoxic/` workstream.
+Loaded via `screen.load_olivieri_normz()`. Because RPE1-hTERT is not
+in DepMap/CCLE, only the 6 pathway features are used (`features.build_olivieri_features()`).
+Leave-one-drug-out (LODO) splits are generated via `splits.generate_lodo_splits()`.
+
+---
+
+### elling2024/
+
+| Field | Value |
+|-------|-------|
+| Source | Elling et al. 2024 (GEO supplementary files) |
+| Publication | Elling U et al. 2024 |
+| Method | CRISPR screen (Cas9) |
+| Format | GEO supplementary TSV/CSV (gene and score columns auto-detected) |
+
+**Files:**
+- GEO supplementary files downloaded and processed by `scripts/elling2024/`
+
+**Use in modelling:**
+Loaded via `screen.load_elling_scores()`, which auto-detects gene symbol
+and score columns. Intended for cross-screen transfer benchmarks
+extending beyond the Chen/Sharon venetoclax pair.
+
+---
+
 ## BIOGRID-ORCS-SCREEN_INDEX file
 
 `data/bulk/BIOGRID-ORCS-SCREEN_INDEX-2.0.18.index.tab.txt` — index

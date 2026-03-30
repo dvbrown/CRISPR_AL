@@ -87,6 +87,62 @@ def load_olivieri_normz(path: str) -> pd.DataFrame:
     return pd.read_parquet(path)
 
 
+def load_elling_scores(path: str) -> pd.DataFrame:
+    """Load a single Elling 2024 GEO supplementary gene-level score file.
+
+    Handles CSV/TSV/Excel formats (plain or gzip). Detects gene symbol and
+    score columns heuristically. Drops rows with missing gene or non-finite
+    score. Deduplicates on gene_symbol (keep first). Returns DataFrame with
+    columns: gene_symbol, score_raw.
+    """
+    import re
+
+    p_str = str(path)
+    name_lower = p_str.lower()
+
+    if name_lower.endswith(".xlsx"):
+        df = pd.read_excel(path)
+    else:
+        sep = "\t" if (name_lower.endswith(".tsv") or name_lower.endswith(".tsv.gz")) else ","
+        try:
+            df = pd.read_csv(path, sep=sep, low_memory=False)
+        except Exception:
+            df = pd.read_csv(path, sep=("\t" if sep == "," else ","), low_memory=False)
+
+    # Detect gene symbol column
+    gene_col = None
+    for candidate in ["Gene", "gene", "gene_symbol", "GeneSymbol", "Symbol", "GENE", "SYMBOL", "GeneName"]:
+        if candidate in df.columns:
+            gene_col = candidate
+            break
+    if gene_col is None:
+        raise ValueError(f"Cannot detect gene column in {path}. Columns: {list(df.columns)}")
+
+    # Detect score column
+    score_col = None
+    for candidate in ["NormZ", "normz", "norm_z", "norm z", "LFC", "lfc", "log2FC", "log2fc", "score", "Score"]:
+        if candidate in df.columns:
+            score_col = candidate
+            break
+    if score_col is None:
+        # First numeric column that isn't the gene column
+        for col in df.columns:
+            if col == gene_col:
+                continue
+            if pd.api.types.is_numeric_dtype(df[col]):
+                score_col = col
+                break
+    if score_col is None:
+        raise ValueError(f"Cannot detect score column in {path}. Columns: {list(df.columns)}")
+
+    df = df[[gene_col, score_col]].rename(columns={gene_col: "gene_symbol", score_col: "score_raw"})
+    df = df[df["gene_symbol"].notna() & (df["gene_symbol"].astype(str) != "")]
+    df["score_raw"] = pd.to_numeric(df["score_raw"], errors="coerce")
+    df = df[np.isfinite(df["score_raw"])]
+    df = df.drop_duplicates(subset="gene_symbol").reset_index(drop=True)
+    return df
+
+
 def zscore_normalize(df: pd.DataFrame, score_col: str = "cs") -> pd.DataFrame:
     """Fit z-score on ALL genes and add score_norm column.
 
